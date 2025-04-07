@@ -7,6 +7,10 @@
   ],
   "compilerOptions": {
     "baseUrl": ".",
+<<<<<<< HEAD
+=======
+    "types": ["jest"],
+>>>>>>> 4d30b8b (login, reserList add)
     "paths": {
       "@/*": ["./src/*"]
     }

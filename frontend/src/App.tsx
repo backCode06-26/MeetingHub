@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Button } from "@/components/ui/button"
 
 import {
@@ -41,3 +42,21 @@ function App() {
 }
 
 export default App
+=======
+import Nav from "@/components/component/nav";
+import "./App.css";
+import AdminMain from "./components/component/main/adminMainMain";
+
+function App() {
+
+  return (
+    <>
+      <Nav />
+
+      <AdminMain></AdminMain>
+    </>
+  );
+}
+
+export default App;
+>>>>>>> 4d30b8b (login, reserList add)

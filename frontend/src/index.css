@@ -37,6 +37,7 @@ h1 {
   line-height: 1.1;
 }
 
+<<<<<<< HEAD
 button {
   border-radius: 8px;
   color: black;
@@ -61,6 +62,8 @@ button:focus {
   border-color: lightgray;
 }
 
+=======
+>>>>>>> 4d30b8b (login, reserList add)
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
