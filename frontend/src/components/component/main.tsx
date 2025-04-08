@@ -2,9 +2,9 @@
 // 로그인를 하고 권한을 알려주는 컨트롤러 필요
 
 import { useState } from "react";
-import AdminMain from "./adminMainMain";
-import LoginMain from "./loginMain";
-import GuestMain from "./guestMain";
+import AdminMain from "./main/adminMainMain";
+import LoginMain from "./main/loginMain";
+import GuestMain from "./main/guestMain";
 
 function Main() {
     const [user, setUser] = useState({

@@ -86,7 +86,6 @@ function AdminMain() {
                         회의실 이름
                       </Label>
                       <Input id="name" value="" className="col-span-3" />
-                      {/* <Input id="name" value={} className="col-span-3" /> */}
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="username" className="text-right">
@@ -97,7 +96,7 @@ function AdminMain() {
                           <Button
                             variant="outline"
                             className={cn(
-                              "w-[300px] justify-start text-left font-normal",
+                              "w-[280px] justify-start text-left font-normal",
                               !date && "text-muted-foreground"
                             )}
                           >
@@ -121,7 +120,7 @@ function AdminMain() {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button type="submit">수정</Button>
+                    <Button type="submit" variant="outline">수정</Button>
                     <Button>삭제</Button>
                   </DialogFooter>
                 </DialogContent>

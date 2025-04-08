@@ -37,33 +37,6 @@ h1 {
   line-height: 1.1;
 }
 
-<<<<<<< HEAD
-button {
-  border-radius: 8px;
-  color: black;
-  border: 1px solid #242424;
-  justify-self: flex-end;
-  padding: 0.6em 1.2em;
-  font-size: 0.5em;
-  font-family: inherit;
-  background-color: white;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: skyblue;
-}
-button:focus,
-button:focus-visible {
-  border-color: skyblue;
-  outline: none;
-}
-button:focus {
-  border-color: lightgray;
-}
-
-=======
->>>>>>> 4d30b8b (login, reserList add)
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
