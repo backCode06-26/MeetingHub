@@ -1,17 +1,13 @@
 package com.project.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "users")
 
 @Setter
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
 public class User {
 
@@ -30,4 +26,12 @@ public class User {
 
     @Column
     private String role;
+
+    @Builder
+    public  User(String email, String username, String password, String role) {
+        this.email = email;
+        this.username = username;
+        this.password = password;
+        this.role = role;
+    }
 }
