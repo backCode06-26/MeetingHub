@@ -24,7 +24,7 @@ public class User {
     @Column
     private String password;
 
-    @Column
+    @Column(name = "role")
     private String role;
 
     @Builder

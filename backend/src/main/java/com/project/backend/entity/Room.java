@@ -1,17 +1,13 @@
 package com.project.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Table(name = "rooms")
 @Entity
 
 @Setter
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
 public class Room {
     @Id
@@ -20,4 +16,10 @@ public class Room {
 
     @Column
     private String roomName;
+
+    @Builder
+    public Room(Long id, String roomName) {
+        this.id = id;
+        this.roomName = roomName;
+    }
 }

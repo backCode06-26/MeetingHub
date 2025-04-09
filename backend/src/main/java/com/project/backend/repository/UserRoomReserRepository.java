@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserRoomReserRepository extends JpaRepository<UserRoomReser,Integer> {
+    public UserRoomReser findById(Long id);
 }

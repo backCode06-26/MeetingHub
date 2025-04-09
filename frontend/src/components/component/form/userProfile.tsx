@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button"
 
 type User = {
   username: string
-  email: string
   role: string
 }
 
@@ -18,17 +17,14 @@ function UserProfile({ user, onLogout }: UserProfileProps) {
       <CardHeader>
         <CardTitle>내 정보</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="flex items-center gap-3">
         <div>
           <strong>닉네임:</strong> {user.username}
         </div>
         <div>
-          <strong>이메일:</strong> {user.email}
-        </div>
-        <div>
           <strong>권한:</strong> {user.role}
         </div>
-        <Button variant="destructive" onClick={onLogout}>
+        <Button variant="outline" onClick={onLogout}>
           로그아웃
         </Button>
       </CardContent>

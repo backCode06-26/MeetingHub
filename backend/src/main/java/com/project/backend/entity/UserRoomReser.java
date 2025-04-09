@@ -1,10 +1,7 @@
 package com.project.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.security.Timestamp;
 import java.sql.Time;
@@ -14,7 +11,6 @@ import java.sql.Time;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 public class UserRoomReser {
 
@@ -35,4 +31,13 @@ public class UserRoomReser {
 
     @Column
     private Time use_time;
+
+    @Builder
+    public UserRoomReser(Long id, User user, Room room, Timestamp reser_date, Time use_time){
+        this.id = id;
+        this.user = user;
+        this.room = room;
+        this.reser_date = reser_date;
+        this.use_time = use_time;
+    }
 }
