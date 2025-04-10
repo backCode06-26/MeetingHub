@@ -1,48 +1,47 @@
-import { useEffect, useState } from "react"
-import axios from "axios"
-import UserProfile from "@/components/component/form/userProfile"
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import UserProfile from "@/components/component/form/userProfile";
+import logo from "@/assets/pnjl44_j6pb-0_logo.jpg";
+import { useState, useEffect } from "react";
 
-function MyPage() {
-  const [user, setUser] = useState({ username : "", role : "" });
-  const [isLogin, setLogin] = useState(false);
-  if(isLogin) {
-    window.location.reload();
-  }
+type pageProps = {
+  username: string;
+  role: string;
+};
 
-  // 로그인
+function MyPage({ username, role }: pageProps) {
+  const navigate = useNavigate();
+
+  const [user, setUser] = useState({ username: "", role: "" });
+
   useEffect(() => {
-    axios
-      .get("/api/user/info", { withCredentials: true })
-      .then((response) => {
-        console.log("로그인한 사용자 정보:", response.data);
-        setUser({
-          username: response.data.username,
-          role: response.data.role
-        });
-        setLogin(true)
-      })
-      .catch((err) => {
-        console.log("로그인 정보 가져오기 실패:", err);
-      });
-  }, []);
+    setUser({
+      username: username,
+      role: role
+    });
+  }, [username, role]);
 
   // 로그아웃
   const handleLogout = () => {
-    axios.post("/api/logout", { withCredentials: true }).then(() => {
-      setUser({
-        username: "",
-        role: ""
-      });
-      if (!localStorage.getItem("reloaded")) {
-        localStorage.setItem("reloaded", "true");
-        window.location.reload();
-      }
-    })
-  }
+    if (confirm("정말로 로그아웃을 하시겠습니까?")) {
+      axios
+        .post("/api/logout", {}, { withCredentials: true })
+        .then(() => {
+          navigate("/");
+        });
+    }
+  };
 
-  if (!user) return <div>로그인 정보를 불러오는 중...</div>
+  if (!user.username) return <div>로그인 정보를 불러오는 중...</div>;
 
-  return <UserProfile user={user} onLogout={handleLogout} />
+  return (
+    <div className="flex justify-between m-2 items-center">
+      <img src={logo} alt="로고" className="h-10" />
+      <div className="flex gap-2">
+        <UserProfile user={user} onLogout={handleLogout} />
+      </div>
+    </div>
+  );
 }
 
 export default MyPage;

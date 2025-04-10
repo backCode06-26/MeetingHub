@@ -11,72 +11,94 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
-import qs from 'qs';
+import qs from "qs";
 import { ChangeEvent, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
-  const [loginInfo, setLoginInfo] = useState({email : "", password : ""})
+  const navigate = useNavigate();
+
+  const [loginInfo, setLoginInfo] = useState({ email: "", password: "" });
   const [open, setOpen] = useState(false);
 
-  const loginUser = () => {
-    if(!checkValidity()) {
-      return
-    }
-    axios.post("/api/loginProc", qs.stringify(loginInfo), {
-      withCredentials: true,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      }
-    })
+  const pageNavigate = () => {
+    axios
+      .get("/api/user/info", { withCredentials: true })
       .then((response) => {
-        console.log(response.data);
+        console.log("사용자 정보:", response.data);
+        const role = response.data.role;
+        if (role == "ROLE_ADMIN") {
+          navigate("/admin");
+        } else {
+          navigate("/login");
+        }
+      })
+      .catch((err) => {
+        console.log("로그인 정보 가져오기 실패:", err);
+        navigate("/");
+      });
+  };
+
+  const loginUser = () => {
+    if (!checkValidity()) {
+      return;
+    }
+    axios
+      .post("/api/loginProc", qs.stringify(loginInfo), {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      })
+      .then(() => {
         alert("로그인에 성공하였습니다!");
-    
-        setLoginInfo({
-          email: "",
-          password: ""
-        });
+        setLoginInfo({ email: "", password: "" });
         setOpen(false);
+
+        pageNavigate();
       })
       .catch((error) => {
         console.log(error);
-      alert("로그인에 실패하였습니다!");
-    });
-  }
+        alert("로그인에 실패하였습니다!");
+      });
+  };
 
   const checkValidity = () => {
-    if(loginInfo.email === "") {
+    if (loginInfo.email === "") {
       alert("이메일를 입력해주세요!");
-      return false
-    } else if(loginInfo.password === "") {
+      return false;
+    } else if (loginInfo.password === "") {
       alert("비밀번호를 입력해주세요!");
-      return false
+      return false;
     }
-    return true
-  }
+    return true;
+  };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const {id, value} = e.target;
+    const { id, value } = e.target;
     setLoginInfo((prevInfo) => ({
       ...prevInfo,
       [id]: value,
-    }))
+    }));
   };
 
   return (
-    <Dialog  open={open} onOpenChange={(isOpen) => {
-      if(!isOpen) {
-        setLoginInfo(
-          {
-            email : "", 
-            password : ""
-          }
-        )
-        setOpen(false)
-      }
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          setLoginInfo({
+            email: "",
+            password: "",
+          });
+          setOpen(false);
+        }
+      }}
+    >
       <DialogTrigger asChild>
-        <Button variant="outline" onClick={() => setOpen(true)}>로그인</Button>
+        <Button variant="outline" onClick={() => setOpen(true)}>
+          로그인
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

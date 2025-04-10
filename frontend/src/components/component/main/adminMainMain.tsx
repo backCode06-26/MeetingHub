@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CalendarIcon } from "lucide-react";
 import { ko } from "date-fns/locale";
 import { format } from "date-fns";
 
@@ -32,7 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Popover,
   PopoverContent,
@@ -43,15 +43,64 @@ import { cn } from "@/lib/utils";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import MyPage from "../form/myPage";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-// 회의실 생성 axios 필요요
+type Room = {
+  roomName : string
+}
 
 function AdminMain() {
+  const navigate = useNavigate();
 
   const [date, setDate] = useState<Date | null>(new Date());
+  const [user, setUser] = useState({ username: "", email: "", role: "" });
+  const [roomName, setRoomName] = useState<Room | null>();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    axios
+      .get("/api/user/info", { withCredentials: true })
+      .then((response) => {
+        console.log("로그인한 사용자 정보:", response.data);
+
+        const { username, email, role } = response.data;
+        setUser({ username: username, email: email, role: role });
+
+        if(response.data.role !== "ROLE_ADMIN") {
+          navigate("/");
+        }
+      })
+      .catch((err) => {
+        console.log("로그인 정보 가져오기 실패:", err);
+        navigate("/");
+      });
+  }, []);
+
+  // 예약 조회
+  // 예약 수정
+  // 회의실 추가
+  function addRoom() {
+    console.log(roomName)
+    axios
+    .post("/api/room/create", roomName)
+    .then((response) => {
+      alert("회의실 생성이 완료되었습니다!");
+      console.log(response);
+
+      setRoomName(null);
+      setOpen(false);
+    })
+    .catch((err) => {
+      alert("회의실 생성을 실패했습니다!");
+      console.log(err);
+    })
+  }
+
   return (
     <>
-      {/* 로그인 여부에 따라 다른 UI 노출 예정 */}
+      <MyPage username={user.username} role={user.role} />
       <Table>
         <TableHeader>
           <TableRow>
@@ -67,7 +116,7 @@ function AdminMain() {
             <TableCell className="font-medium">1</TableCell>
             <TableCell>회의실A</TableCell>
             <TableCell>0000-00-00</TableCell>
-            <TableCell >00:00</TableCell>
+            <TableCell>00:00</TableCell>
             <TableCell className="text-right">
               <Dialog>
                 <DialogTrigger asChild>
@@ -77,7 +126,8 @@ function AdminMain() {
                   <DialogHeader>
                     <DialogTitle>정보수정/삭제</DialogTitle>
                     <DialogDescription>
-                      회의실과 예약시간, 사용시간을 수정할 수 있으며, 회의실을 삭제할 수 있습니다.
+                      회의실과 예약시간, 사용시간을 수정할 수 있으며, 회의실을
+                      삭제할 수 있습니다.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
@@ -101,10 +151,17 @@ function AdminMain() {
                             )}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date ? format(date, "PPPp", { locale: ko }) : <span>날짜를 선택해주세요!</span>}
+                            {date ? (
+                              format(date, "PPPp", { locale: ko })
+                            ) : (
+                              <span>날짜를 선택해주세요!</span>
+                            )}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[400px] p-0 border-none" align="center">
+                        <PopoverContent
+                          className="w-[400px] p-0 border-none"
+                          align="center"
+                        >
                           <DatePicker
                             selected={date}
                             onChange={(date) => setDate(date)}
@@ -120,7 +177,9 @@ function AdminMain() {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button type="submit" variant="outline">수정</Button>
+                    <Button type="submit" variant="outline">
+                      수정
+                    </Button>
                     <Button>삭제</Button>
                   </DialogFooter>
                 </DialogContent>
@@ -130,8 +189,8 @@ function AdminMain() {
         </TableBody>
       </Table>
 
-      <Drawer>
-        <DrawerTrigger className="m-5 p-2 text-base border-gray-300 rounded-md border hover:border-sky-500 hover:bg-gray-200 transition-colors duration-500">
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger onClick={() => setOpen(true)} className="m-5 p-2 text-base border-gray-300 rounded-md border hover:border-sky-500 hover:bg-gray-200 transition-colors duration-500">
           회의실 생성
         </DrawerTrigger>
         <DrawerContent className="w-[50%] m-auto">
@@ -140,11 +199,16 @@ function AdminMain() {
             <DrawerDescription>
               회의실의 이름을 입력하여 회의실을 생성해주세요!
             </DrawerDescription>
-            <Input type="text" placeholder="회의실의 이름을 입력해주세요" className="m-1" />
+            <Input
+              type="text"
+              placeholder="회의실의 이름을 입력해주세요"
+              className="m-1"
+              onChange={(e) => {setRoomName({roomName : e.target.value})}}
+            />
           </DrawerHeader>
 
           <DrawerFooter>
-            <Button className="border hover:border-sky-500">생성</Button>
+            <Button className="border hover:border-sky-500" onClick={addRoom}>생성</Button>
             <DrawerClose>
               <Button
                 variant="outline"
@@ -154,7 +218,6 @@ function AdminMain() {
               </Button>
             </DrawerClose>
           </DrawerFooter>
-
         </DrawerContent>
       </Drawer>
     </>

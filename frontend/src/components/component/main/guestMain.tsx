@@ -6,11 +6,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import LoginPage from "../form/loginPage";
 
 function GuestMain() {
 
   return (
     <>
+      <LoginPage></LoginPage>
       {/* 로그인 여부에 따라 다른 UI 노출 예정 */}
       <Table>
         <TableHeader>
