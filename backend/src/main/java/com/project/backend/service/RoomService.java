@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class RoomService {
 
@@ -25,6 +27,12 @@ public class RoomService {
         }
         return  ResponseEntity.status(HttpStatus.OK)
                 .body(roomRepository.save(roomDTO.toEntity()));
+    }
+
+    // 회의실 일기
+    public ResponseEntity<List<RoomDTO>> readRoom() {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(roomRepository.findAll().stream().map(Room::toDTO).toList());
     }
 
     // 회의실 수정

@@ -51,6 +51,7 @@ public class UserController {
         Map<String, Object> userInfo = new HashMap<>();
         userInfo.put("message", true);
         userInfo.put("username", userDetails.getUsername());
+        userInfo.put("email", userDetails.getEmail());
         userInfo.put("role", userDetails.getRole());
 
         return ResponseEntity.ok(userInfo);

@@ -5,14 +5,6 @@ import { CalendarIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Drawer,
   DrawerClose,
   DrawerContent,
@@ -29,7 +21,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Popover,
   PopoverContent,
@@ -42,6 +34,7 @@ import { cn } from "@/lib/utils";
 import MyPage from "../form/myPage";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import List from "../form/list";
 
 type Room = {
   label: string;
@@ -49,31 +42,29 @@ type Room = {
 };
 
 type User = {
-  username : string;
-  email : string;
-  role : string;
-}
+  username: string;
+  email: string;
+  role: string;
+};
 
 function LoginMain() {
   const navigate = useNavigate();
 
   const [roomList, setRoomList] = useState<Room[]>([]);
+  const [opne, setOpen] = useState<boolean>(false);
 
-  const [date, setDate] = useState<Date | null>(new Date());
-  const [user, setUser] = useState<User>({
-    username : "",
-    email : "",
-    role : ""
-  });
-  const [roomId, setRoomId] = useState<string>()
-
+  const [user, setUser] = useState<User>({ username: "", email: "", role: "" });
+  const [roomId, setRoomId] = useState<string>();
+  const [reserDate, setReserDate] = useState<Date | null>(new Date());
+  const [useTime, setUseTime] = useState<Date | null>(new Date());
 
   useEffect(() => {
+    // 로그인 되었는지 확인
     axios
       .get("/api/user/info", { withCredentials: true })
       .then((response) => {
         console.log("로그인한 사용자 정보:", response.data);
-        
+
         const { username, email, role } = response.data;
         setUser({ username: username, email: email, role: role });
       })
@@ -82,7 +73,8 @@ function LoginMain() {
         navigate("/");
       });
 
-    axios.get("/api/room/read").then((response) => {
+    // 회의실 정보
+    axios.get("/api/room/all").then((response) => {
       console.log("회의실 정보", response.data);
       const roomData: Room[] = response.data.map((data: any) => ({
         value: data.id,
@@ -92,33 +84,16 @@ function LoginMain() {
     });
   }, []);
 
-  // 예약 조회
-  // 예약 추가가
+  // 예약 추가
+
 
   return (
     <>
       <MyPage username={user.username} role={user.role} />
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[100px] text-center">번호</TableHead>
-            <TableHead className="text-center">회의실 이름</TableHead>
-            <TableHead className="text-center">이메일</TableHead>
-            <TableHead className="text-right">예약 시간</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow>
-            <TableCell className="font-medium">INV001</TableCell>
-            <TableCell>결제 완료</TableCell>
-            <TableCell>신용카드</TableCell>
-            <TableCell className="text-right">₩250,000</TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+      <List></List>
 
-      <Drawer>
+      <Drawer open={opne} onOpenChange={(isOpne) => setOpen(!isOpne ? false : true)}>
         <DrawerTrigger className="m-5 p-2 text-base border-gray-300 rounded-md border hover:border-sky-500 hover:bg-gray-200 transition-colors duration-500">
           회의실 예약
         </DrawerTrigger>
@@ -130,36 +105,38 @@ function LoginMain() {
             </DrawerDescription>
 
             {/* 회의실 선택 */}
-            <Select onValueChange={(value) => {setRoomId(value)}}>
+            <Select
+              onValueChange={(value) => {
+                setRoomId(value);
+              }}
+            >
               <SelectTrigger className="w-[300px] m-auto border-gray-300 rounded-md border hover:border-sky-500 hover:bg-gray-200 transition-colors duration-500">
                 <SelectValue placeholder="회의실을 선택해주세요!" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                {
-                  roomList.map((data) => (
+                  {roomList.map((data) => (
                     <SelectItem key={data.value} value={data.value}>
                       {data.label}
                     </SelectItem>
-                  ))
-                }
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
 
-            {/* 날짜 및 시간 선택 */}
+            {/* 예약시간 */}
             <Popover>
               <PopoverTrigger asChild className="mx-auto">
                 <Button
                   variant="outline"
                   className={cn(
                     "w-[300px] justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
+                    !reserDate && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? (
-                    format(date, "PPPp", { locale: ko })
+                  {reserDate ? (
+                    format(reserDate, "PPPp", { locale: ko })
                   ) : (
                     <span>날짜를 선택해주세요!</span>
                   )}
@@ -170,8 +147,42 @@ function LoginMain() {
                 align="center"
               >
                 <DatePicker
-                  selected={date}
-                  onChange={(date) => setDate(date)}
+                  selected={reserDate}
+                  onChange={(date) => setReserDate(date)}
+                  locale={ko}
+                  showTimeSelect
+                  timeFormat="HH:mm"
+                  timeIntervals={15}
+                  dateFormat="Pp"
+                  className="border-none focus:ring-0"
+                />
+              </PopoverContent>
+            </Popover>
+            {/* 사용시간 */}
+            <Popover>
+              <PopoverTrigger asChild className="mx-auto">
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-[300px] justify-start text-left font-normal",
+                    !useTime && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {useTime ? (
+                    format(useTime, "PPPp", { locale: ko })
+                  ) : (
+                    <span>날짜를 선택해주세요!</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-[400px] p-0 border-none"
+                align="center"
+              >
+                <DatePicker
+                  selected={useTime}
+                  onChange={(date) => setUseTime(date)}
                   locale={ko}
                   showTimeSelect
                   timeFormat="HH:mm"

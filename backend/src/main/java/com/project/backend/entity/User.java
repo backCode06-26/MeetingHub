@@ -5,33 +5,24 @@ import lombok.*;
 
 @Entity
 @Table(name = "users")
-
 @Setter
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column
+    @Column(name = "email", nullable = false)
     private String email;
 
-    @Column
+    @Column(name = "username", nullable = false, length = 30)
     private String username;
 
-    @Column
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "role")
-    private String role;
+    @Column(name = "role", nullable = false, length = 30)
+    private String role = "ROLE_USER";
 
-    @Builder
-    public  User(String email, String username, String password, String role) {
-        this.email = email;
-        this.username = username;
-        this.password = password;
-        this.role = role;
-    }
 }

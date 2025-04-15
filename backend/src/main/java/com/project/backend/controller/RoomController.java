@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 public class RoomController {
 
@@ -22,6 +24,10 @@ public class RoomController {
     public ResponseEntity<Room> createRoom(@RequestBody RoomDTO roomDTO) {
         return roomService.createRoom(roomDTO);
     }
+
+    // 읽기
+    @GetMapping("/api/room/all")
+    public ResponseEntity<List<RoomDTO>> readRoom() { return roomService.readRoom(); }
 
     // 수정
     @PatchMapping("/api/room/update")
