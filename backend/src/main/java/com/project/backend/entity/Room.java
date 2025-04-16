@@ -22,6 +22,7 @@ public class Room {
     public RoomDTO toDTO() {
         return RoomDTO
                 .builder()
+                .id(id)
                 .roomName(roomName)
                 .build();
     }

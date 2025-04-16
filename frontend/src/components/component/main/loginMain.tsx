@@ -34,39 +34,43 @@ import { cn } from "@/lib/utils";
 import MyPage from "../form/myPage";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import List from "../form/list";
+import ReserList from "../form/reserList";
 
 type Room = {
   label: string;
   value: string;
 };
 
-type User = {
-  username: string;
+type Reser = {
   email: string;
-  role: string;
+  roomId: string;
+  reserDate: Date;
+  useTime: Date;
 };
 
 function LoginMain() {
   const navigate = useNavigate();
 
   const [roomList, setRoomList] = useState<Room[]>([]);
-  const [opne, setOpen] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(false);
 
-  const [user, setUser] = useState<User>({ username: "", email: "", role: "" });
-  const [roomId, setRoomId] = useState<string>();
-  const [reserDate, setReserDate] = useState<Date | null>(new Date());
-  const [useTime, setUseTime] = useState<Date | null>(new Date());
+  const [reserData, setReserData] = useState<Reser>({
+    email: "",
+    roomId: "",
+    reserDate: new Date(),
+    useTime: new Date(),
+  });
 
   useEffect(() => {
     // 로그인 되었는지 확인
     axios
       .get("/api/user/info", { withCredentials: true })
       .then((response) => {
-        console.log("로그인한 사용자 정보:", response.data);
-
-        const { username, email, role } = response.data;
-        setUser({ username: username, email: email, role: role });
+        const { email } = response.data;
+        setReserData((prev) => ({
+          ...prev,
+          email,
+        }));
       })
       .catch((err) => {
         console.log("로그인 정보 가져오기 실패:", err);
@@ -75,7 +79,6 @@ function LoginMain() {
 
     // 회의실 정보
     axios.get("/api/room/all").then((response) => {
-      console.log("회의실 정보", response.data);
       const roomData: Room[] = response.data.map((data: any) => ({
         value: data.id,
         label: data.roomName,
@@ -84,16 +87,34 @@ function LoginMain() {
     });
   }, []);
 
-  // 예약 추가
-
+  // 예약 추가하기
+  const addReser = () => {
+    axios
+      .post("/api/reser/create", reserData)
+      .then(() => {
+        alert("예약이 완료되었습니다.");
+        setOpen(false);
+        setReserData({
+          email: "",
+          roomId: "",
+          reserDate: new Date(),
+          useTime: new Date(),
+        });
+        console.log("예약 정보", reserData);
+      })
+      .catch((err) => {
+        alert("예약을 실패하였습니다.");
+        console.log(err);
+      });
+  };
 
   return (
     <>
-      <MyPage username={user.username} role={user.role} />
+      <MyPage />
 
-      <List></List>
+      <ReserList />
 
-      <Drawer open={opne} onOpenChange={(isOpne) => setOpen(!isOpne ? false : true)}>
+      <Drawer open={open} onOpenChange={(isOpen) => setOpen(isOpen)}>
         <DrawerTrigger className="m-5 p-2 text-base border-gray-300 rounded-md border hover:border-sky-500 hover:bg-gray-200 transition-colors duration-500">
           회의실 예약
         </DrawerTrigger>
@@ -106,9 +127,12 @@ function LoginMain() {
 
             {/* 회의실 선택 */}
             <Select
-              onValueChange={(value) => {
-                setRoomId(value);
-              }}
+              onValueChange={(value) =>
+                setReserData((prev) => ({
+                  ...prev,
+                  roomId: value,
+                }))
+              }
             >
               <SelectTrigger className="w-[300px] m-auto border-gray-300 rounded-md border hover:border-sky-500 hover:bg-gray-200 transition-colors duration-500">
                 <SelectValue placeholder="회의실을 선택해주세요!" />
@@ -124,19 +148,19 @@ function LoginMain() {
               </SelectContent>
             </Select>
 
-            {/* 예약시간 */}
+            {/* 예약 시간 선택 */}
             <Popover>
               <PopoverTrigger asChild className="mx-auto">
                 <Button
                   variant="outline"
                   className={cn(
                     "w-[300px] justify-start text-left font-normal",
-                    !reserDate && "text-muted-foreground"
+                    !reserData.reserDate && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {reserDate ? (
-                    format(reserDate, "PPPp", { locale: ko })
+                  {reserData.reserDate ? (
+                    format(reserData.reserDate, "PPPp", { locale: ko })
                   ) : (
                     <span>날짜를 선택해주세요!</span>
                   )}
@@ -147,8 +171,13 @@ function LoginMain() {
                 align="center"
               >
                 <DatePicker
-                  selected={reserDate}
-                  onChange={(date) => setReserDate(date)}
+                  selected={reserData.reserDate}
+                  onChange={(date) =>
+                    setReserData((prev) => ({
+                      ...prev,
+                      reserDate: date!,
+                    }))
+                  }
                   locale={ko}
                   showTimeSelect
                   timeFormat="HH:mm"
@@ -158,21 +187,22 @@ function LoginMain() {
                 />
               </PopoverContent>
             </Popover>
-            {/* 사용시간 */}
+
+            {/* 사용 시간 선택 */}
             <Popover>
               <PopoverTrigger asChild className="mx-auto">
                 <Button
                   variant="outline"
                   className={cn(
                     "w-[300px] justify-start text-left font-normal",
-                    !useTime && "text-muted-foreground"
+                    !reserData.useTime && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {useTime ? (
-                    format(useTime, "PPPp", { locale: ko })
+                  {reserData.useTime ? (
+                    format(reserData.useTime, "PPPp", { locale: ko })
                   ) : (
-                    <span>날짜를 선택해주세요!</span>
+                    <span>사용 시간을 선택해주세요!</span>
                   )}
                 </Button>
               </PopoverTrigger>
@@ -181,8 +211,13 @@ function LoginMain() {
                 align="center"
               >
                 <DatePicker
-                  selected={useTime}
-                  onChange={(date) => setUseTime(date)}
+                  selected={reserData.useTime}
+                  onChange={(date) =>
+                    setReserData((prev) => ({
+                      ...prev,
+                      useTime: date!,
+                    }))
+                  }
                   locale={ko}
                   showTimeSelect
                   timeFormat="HH:mm"
@@ -195,11 +230,22 @@ function LoginMain() {
           </DrawerHeader>
 
           <DrawerFooter>
-            <Button className="border hover:border-sky-500">예약</Button>
+            <Button className="border hover:border-sky-500" onClick={addReser}>
+              예약
+            </Button>
             <DrawerClose>
               <Button
                 variant="outline"
                 className="w-[100%] shadow-none hover:bg-gray-200 border hover:border-sky-500"
+                onClick={() => {
+                  setOpen(false);
+                  setReserData({
+                    email: "",
+                    roomId: "",
+                    reserDate: new Date(),
+                    useTime: new Date(),
+                  });
+                }}
               >
                 취소
               </Button>

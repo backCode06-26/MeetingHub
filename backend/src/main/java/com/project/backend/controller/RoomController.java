@@ -36,8 +36,8 @@ public class RoomController {
     }
 
     // 삭제
-    @DeleteMapping("api/room/delete/{id}")
-    public ResponseEntity<Room> deleteRoom(@PathVariable Long id) {
+        @DeleteMapping("api/room/delete/{id}")
+    public ResponseEntity<List<RoomDTO>> deleteRoom(@PathVariable Long id) {
         return roomService.deleteRoom(id);
     }
 }

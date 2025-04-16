@@ -4,8 +4,7 @@ import com.project.backend.entity.DTO.ReserResponseDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.security.Timestamp;
-import java.sql.Time;
+import java.sql.Timestamp;
 
 @Table(name="user_room_reser")
 @Entity
@@ -29,27 +28,27 @@ public class Reser {
     private Room room;
 
     @Column(name = "reser_date", nullable = false)
-    private Timestamp reser_date;
+    private Timestamp reserDate;
 
     @Column(name = "use_time", nullable = false)
-    private Timestamp use_time;
+    private Timestamp useTime;
 
     @Builder
-    public Reser(Long id, User user, Room room, Timestamp reser_date, Timestamp use_time){
+    public Reser(Long id, User user, Room room, Timestamp reserDate, Timestamp useTime){
         this.id = id;
         this.user = user;
         this.room = room;
-        this.reser_date = reser_date;
-        this.use_time = use_time;
+        this.reserDate = reserDate;
+        this.useTime = useTime;
     }
 
     public ReserResponseDTO toDTO(){
-        ReserResponseDTO.builder()
+        return ReserResponseDTO.builder()
                 .id(this.id)
                 .username(this.user.getUsername())
                 .roomName(this.room.getRoomName())
-                .reserDate(this.reser_date)
-                .useTime(this.use_time)
+                .reserDate(this.reserDate)
+                .useTime(this.useTime)
                 .build();
     }
 }

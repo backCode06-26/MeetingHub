@@ -1,11 +1,10 @@
 package com.project.backend.entity.DTO;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
 @Getter
 @NoArgsConstructor

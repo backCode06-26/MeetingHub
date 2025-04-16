@@ -25,6 +25,7 @@ import java.util.Collections;
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
+    private final CustomAuthenticationFailureHandler authenticationFailureHandler;
 
     @Bean
     SecurityFilterChain customSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -52,6 +53,7 @@ public class SecurityConfig {
                             PrintWriter out = response.getWriter();
                             out.println("{\"message\":\"success\",\"role\":\"ROLE_USER\"}");
                         })
+                        .failureHandler(authenticationFailureHandler)
                 )
                 .userDetailsService(userDetailsService)
                 .logout((logout) -> logout
