@@ -10,7 +10,7 @@ import java.util.List;
 
 
 @Repository
-public interface ReserRepository extends JpaRepository<Reser,Integer> {
+public interface ReserRepository extends JpaRepository<Reser, Integer> {
     Reser findById(Long id);
 
     @Query(value = "SELECT urr.ID as id, u.USERNAME as username, r.ROOM_NAME as roomName, " +

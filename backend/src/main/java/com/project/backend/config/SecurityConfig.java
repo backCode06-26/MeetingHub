@@ -29,6 +29,7 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain customSecurityFilterChain(HttpSecurity http) throws Exception {
+        // 다른 포트의 정보를 요청하기 위한 코드
         http.cors(corsCustomizer -> corsCustomizer.configurationSource(new CorsConfigurationSource() {
             @Override
             public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
@@ -42,9 +43,16 @@ public class SecurityConfig {
             }
         })).csrf(AbstractHttpConfigurer::disable)
 
+                // 로그인을 하기 위한 코드
                 .formLogin((form) -> form
+                        // spring security에서 사용자의 정보를 인식할 때 사용하는 정보의 이름
                         .usernameParameter("email")
+                        // spring security에서 로그인을 처리하는 경로, 일반적으로 username(유일한 값), password를 보냄
                         .loginProcessingUrl("/api/loginProc")
+                        // 예시 /api/loginProc?useranme=hojin&password=1234
+                        // 데이터는 컨트롤러에서 객체를 통해서 받음
+
+                        // 로그인이 완료되었을때 어떤 형식으로 값을 받을 것인지 지정하는 코드
                         .successHandler((request, response, authentication) -> {
                             response.setStatus(HttpServletResponse.SC_OK);
                             response.setContentType("application/json");

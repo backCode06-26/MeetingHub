@@ -31,46 +31,75 @@ import { CalendarIcon } from "lucide-react";
 import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { Controller, useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useNavigate } from "react-router-dom";
+import * as yup from "yup";
 
 type Reser = {
   id: number;
   username: string;
   roomName: string;
-  reserDate: string;
-  useTime: string;
-};
-
-type Update = {
   reserDate: Date;
   useTime: Date;
 };
 
-interface ListProps {
-  role?: string;
-}
-
-function formatSafe(dateStr: string) {
-  const parsed = new Date(dateStr);
+function formatSafe(date: Date | string) {
+  const parsed = new Date(date);
   return isValid(parsed)
     ? format(parsed, "yyyy-MM-dd a hh:mm", { locale: ko })
     : "잘못된 날짜";
 }
+function List() {
+  const navigate = useNavigate();
 
-function List({ role = "ROLE_USER" }: ListProps) {
-  const [reserList, setReserList] = useState<Reser[]>([]);
-  const [open, setOpen] = useState<boolean[]>([]);
+  const schema = yup.object().shape({
+    reserDate: yup
+      .date()
+      .typeError("날짜 형식이 올바르지 않습니다!")
+      .min(
+        new Date(new Date().getTime() - 24 * 60 * 60 * 1000),
+        "오늘 이전의 날짜를 선택 할 수 없습니다!"
+      )
+      .required("날짜를 입력해주세요!"),
+    useTime: yup
+      .date()
+      .typeError("날짜 형식이 올바르지 않습니다!")
+      .test(
+        "is-time-valid",
+        "사용시간은 예약시간보다 최소 5분 이상으로 설정해야합니다!",
+        function (value) {
+          const { reserDate } = this.parent;
+          if (!reserDate || !value) return true;
 
-  const [date, setDate] = useState<Update>({
-    reserDate: new Date(),
-    useTime: new Date(),
+          const timeDiff = value.getTime() - reserDate.getTime();
+          return timeDiff >= 5 * 60 * 1000;
+        }
+      )
+      .required("사용시간을 입력하지 않았습니다!"),
   });
 
-  const updateReser = (id: number) => {
+  const { handleSubmit, setValue, control } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      reserDate: new Date(),
+      useTime: new Date(),
+    },
+  });
+
+  const [reserList, setReserList] = useState<Reser[]>([]);
+  const [role, setRole] = useState();
+  const [open, setOpen] = useState<boolean[]>([]);
+
+  const updateReser = (
+    id: number,
+    data: { reserDate: Date; useTime: Date }
+  ) => {
     axios
       .patch("/api/reser/update", {
         id: id,
-        reserDate: date.reserDate,
-        useTime: date.useTime,
+        reserDate: data.reserDate,
+        useTime: data.useTime,
       })
       .then((response) => {
         alert("시간이 수정되었습니다!");
@@ -80,8 +109,8 @@ function List({ role = "ROLE_USER" }: ListProps) {
           id: response.data.id,
           username: response.data.user.username,
           roomName: response.data.room.roomName,
-          reserDate: response.data.reserDate,
-          useTime: response.data.useTime,
+          reserDate: new Date(response.data.reserDate),
+          useTime: new Date(response.data.useTime),
         };
         setOpen(() => {
           const newOpen = [...open];
@@ -89,7 +118,9 @@ function List({ role = "ROLE_USER" }: ListProps) {
           return newOpen;
         });
 
-        setReserList((prev) => prev.map((r) => (r.id === id ? updatedReser : r)));
+        setReserList((prev) =>
+          prev.map((r) => (r.id === id ? updatedReser : r))
+        );
       })
       .catch((err) => {
         alert("시간 수정을 실패하였습니다!");
@@ -97,7 +128,32 @@ function List({ role = "ROLE_USER" }: ListProps) {
       });
   };
 
+  const onError = (errors: any) => {
+    if (errors.reserDate) {
+      alert(errors.reserDate.message);
+    } else if (errors.useTime) {
+      alert(errors.useTime.message);
+    }
+  };
+
   useEffect(() => {
+    // 로그인 정보 가져오기
+    axios
+      .get("/api/user/info", { withCredentials: true })
+      .then((response) => {
+        console.log("로그인한 사용자 정보:", response.data);
+
+        setRole(response.data.role);
+        if (response.data.role === "ROLE_ADMIN") {
+          navigate("/admin");
+        }
+      })
+      .catch((err) => {
+        console.log("로그인 정보 가져오기 실패:", err);
+        navigate("/");
+      });
+
+    // 예약 정보 가져오기
     axios
       .get("/api/reser/all")
       .then((response) => {
@@ -105,8 +161,8 @@ function List({ role = "ROLE_USER" }: ListProps) {
           id: data.id,
           username: data.username,
           roomName: data.roomName,
-          reserDate: data.reserDate,
-          useTime: data.useTime,
+          reserDate: new Date(data.reserDate),
+          useTime: new Date(data.useTime),
         }));
         setReserList(reserData);
         console.log("예약 정보", reserData);
@@ -153,110 +209,122 @@ function List({ role = "ROLE_USER" }: ListProps) {
                       <Button variant="outline">수정</Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>정보수정/삭제</DialogTitle>
-                        <DialogDescription>
-                          예약 시간과 사용시간을 수정할 수 있습니다!
-                        </DialogDescription>
+                      <form
+                        onSubmit={handleSubmit(
+                          (formData) => updateReser(data.id, formData),
+                          onError
+                        )}
+                      >
+                        <DialogHeader>
+                          <DialogTitle>정보수정/삭제</DialogTitle>
+                          <DialogDescription>
+                            예약 시간과 사용시간을 수정할 수 있습니다!
+                          </DialogDescription>
 
-                        {/* 예약시간 */}
-                        <Popover>
-                          <PopoverTrigger asChild className="m-auto">
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-[300px] justify-start text-left font-normal",
-                                date.reserDate && "text-muted-foreground"
-                              )}
+                          {/* 예약시간 */}
+                          <Popover>
+                            <PopoverTrigger asChild className="m-auto">
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-[300px] justify-start text-left font-normal",
+                                  data.reserDate && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {data.reserDate ? (
+                                  format(data.reserDate, "yyyy-MM-dd a hh:mm", {
+                                    locale: ko,
+                                  })
+                                ) : (
+                                  <span>날짜를 선택해주세요!</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-[400px] p-0 border-none"
+                              align="center"
                             >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {date.reserDate ? (
-                                format(data.reserDate, "yyyy-MM-dd a hh:mm", { locale: ko })
-                              ) : (
-                                <span>날짜를 선택해주세요!</span>
-                              )}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            className="w-[400px] p-0 border-none"
-                            align="center"
-                          >
-                            <DatePicker
-                              selected={date.reserDate}
-                              onChange={(d) =>
-                                setDate((prev) => ({ ...prev, reserDate: d! }))
-                              }
-                              locale={ko}
-                              showTimeSelect
-                              timeFormat="HH:mm"
-                              timeIntervals={15}
-                              dateFormat="Pp"
-                              className="border-none focus:ring-0"
-                            />
-                          </PopoverContent>
-                        </Popover>
+                              <Controller
+                                name="reserDate"
+                                control={control}
+                                render={({ field }) => (
+                                  <DatePicker
+                                    selected={field.value}
+                                    onChange={(date) => field.onChange(date)}
+                                    locale={ko}
+                                    showTimeSelect
+                                    timeFormat="HH:mm"
+                                    timeIntervals={15}
+                                    dateFormat="Pp"
+                                    className="border-none focus:ring-0"
+                                  />
+                                )}
+                              />
+                            </PopoverContent>
+                          </Popover>
 
-                        {/* 사용시간 */}
-                        <Popover>
-                          <PopoverTrigger asChild className="m-auto">
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-[300px] justify-start text-left font-normal",
-                                date.useTime && "text-muted-foreground"
-                              )}
+                          {/* 사용시간 */}
+                          <Popover>
+                            <PopoverTrigger asChild className="m-auto">
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-[300px] justify-start text-left font-normal",
+                                  data.useTime && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {data.useTime ? (
+                                  format(data.useTime, "yyyy-MM-dd a hh:mm", {
+                                    locale: ko,
+                                  })
+                                ) : (
+                                  <span>날짜를 선택해주세요!</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-[400px] p-0 border-none"
+                              align="center"
                             >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {date.useTime ? (
-                                format(data.useTime, "yyyy-MM-dd a hh:mm", { locale: ko })
-                              ) : (
-                                <span>날짜를 선택해주세요!</span>
-                              )}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            className="w-[400px] p-0 border-none"
-                            align="center"
+                              <Controller
+                                name="useTime"
+                                control={control}
+                                render={({ field }) => (
+                                  <DatePicker
+                                    selected={field.value}
+                                    onChange={(date) => field.onChange(date)}
+                                    locale={ko}
+                                    showTimeSelect
+                                    timeFormat="HH:mm"
+                                    timeIntervals={15}
+                                    dateFormat="Pp"
+                                    className="border-none focus:ring-0"
+                                  />
+                                )}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button type="submit" variant="outline">
+                            수정
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              const newOpen = [...open];
+                              newOpen[data.id] = !newOpen[data.id];
+                              setOpen(newOpen);
+                              setValue("reserDate", new Date());
+                              setValue("useTime", new Date());
+                            }}
                           >
-                            <DatePicker
-                              selected={date.useTime}
-                              onChange={(d) =>
-                                setDate((prev) => ({ ...prev, useTime: d! }))
-                              }
-                              locale={ko}
-                              showTimeSelect
-                              timeFormat="HH:mm"
-                              timeIntervals={15}
-                              dateFormat="Pp"
-                              className="border-none focus:ring-0"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </DialogHeader>
-                      <DialogFooter>
-                        <Button
-                          onClick={() => updateReser(data.id)}
-                          type="submit"
-                          variant="outline"
-                        >
-                          수정
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            const newOpen = [...open];
-                            newOpen[data.id] = !newOpen[data.id];
-                            setOpen(newOpen);
-
-                            // 날짜 초기화
-                            setDate({
-                              reserDate: new Date(),
-                              useTime: new Date(),
-                            });
-                          }}
-                        >
-                          닫기
-                        </Button>
-                      </DialogFooter>
+                            닫기
+                          </Button>
+                        </DialogFooter>
+                      </form>
                     </DialogContent>
                   </Dialog>
                 </TableCell>

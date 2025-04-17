@@ -27,7 +27,9 @@ public class RoomController {
 
     // 읽기
     @GetMapping("/api/room/all")
-    public ResponseEntity<List<RoomDTO>> readRoom() { return roomService.readRoom(); }
+    public ResponseEntity<List<RoomDTO>> readRoom() {
+        return roomService.readRoom();
+    }
 
     // 수정
     @PatchMapping("/api/room/update")
@@ -36,7 +38,7 @@ public class RoomController {
     }
 
     // 삭제
-        @DeleteMapping("api/room/delete/{id}")
+    @DeleteMapping("api/room/delete/{id}")
     public ResponseEntity<List<RoomDTO>> deleteRoom(@PathVariable Long id) {
         return roomService.deleteRoom(id);
     }

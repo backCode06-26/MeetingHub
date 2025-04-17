@@ -26,17 +26,17 @@ public class RoomService {
 
     // 회의실 생성
     public ResponseEntity<Room> createRoom(RoomDTO roomDTO) {
-        if(roomRepository.findById(roomDTO.getId()) != null) {
+        if (roomRepository.findById(roomDTO.getId()) != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        return  ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(roomRepository.save(roomDTO.toEntity()));
     }
 
     // 회의실 일기
     public ResponseEntity<List<RoomDTO>> readRoom() {
         List<RoomDTO> rooms = roomRepository.findAll().stream().map(Room::toDTO).toList();
-        if(rooms.isEmpty()) {
+        if (rooms.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         return ResponseEntity.status(HttpStatus.OK).body(rooms);
@@ -44,7 +44,7 @@ public class RoomService {
 
     // 회의실 수정
     public ResponseEntity<Room> updateRoom(RoomDTO roomDTO) {
-        if(roomRepository.findById(roomDTO.getId()) != null) {
+        if (roomRepository.findById(roomDTO.getId()) != null) {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(roomRepository.save(roomDTO.toEntity()));
         }
@@ -54,7 +54,7 @@ public class RoomService {
     // 회의실 삭제
     @Transactional
     public ResponseEntity<List<RoomDTO>> deleteRoom(Long id) {
-        if(roomRepository.findById(id) != null) {
+        if (roomRepository.findById(id) != null) {
 
             reserRepository.deleteByRoomId(id);
 
