@@ -51,7 +51,7 @@ type FormValues = {
   useTime: Date;
 };
 
-export default function BoardMain() {
+function BoardMain() {
   const navigate = useNavigate();
   const [roomList, setRoomList] = useState<Room[]>([]);
   const [open, setOpen] = useState<boolean>(false);
@@ -274,3 +274,5 @@ export default function BoardMain() {
     </>
   );
 }
+
+export default BoardMain;
