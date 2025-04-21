@@ -1,0 +1,24 @@
+
+회원가입/로그인
+https://ui.shadcn.com/docs/components/tabs
+npx shadcn@latest add tabs
+
+예약 현황
+회의실 리스트
+https://ui.shadcn.com/docs/components/table
+npx shadcn@latest add table
+
+회의실 예약, 추가
+https://ui.shadcn.com/docs/components/drawer
+npx shadcn@latest add drawer
+
+회의실 수정, 삭제
+회의실 시간 수정, 삭제
+https://ui.shadcn.com/docs/components/popover
+npx shadcn@latest add popover
+
+https://www.w3schools.com/react/react_router.asp
+
+권한 등록되는지 확인
+회의실 예약
+회의실 등록록

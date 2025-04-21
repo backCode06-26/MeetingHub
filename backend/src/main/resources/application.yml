@@ -1,0 +1,21 @@
+
+spring:
+    application:
+      name: backend
+    datasource:
+      driver-class-name: org.mariadb.jdbc.Driver
+      url: jdbc:mariadb://localhost:3306/rever
+      username: root
+      password: qxewzc1324@
+    jpa:
+      hibernate:
+        ddl-auto: update
+      properties:
+        hibernate:
+          format_sql: true
+logging:
+  level:
+    org.hibernate.sql: debug
+    org.hibernate.type: trace
+server:
+  port: 8080
