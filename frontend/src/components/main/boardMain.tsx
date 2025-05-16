@@ -30,13 +30,13 @@ import {
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-import MyPage from "../form/myPage";
-import ReserList from "../form/reserList";
+import MyPage from "../component/form/myPage";
 import axios from "axios";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
 import * as yup from "yup";
+import BoardTab from "../component/tab/boardTab";
 
 // 타입 정의
 type Room = {
@@ -142,7 +142,7 @@ function BoardMain() {
   return (
     <>
       <MyPage />
-      <ReserList />
+      <BoardTab></BoardTab>
 
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerTrigger className="m-5 p-2 text-base border-gray-300 rounded-md border hover:border-sky-500 hover:bg-gray-200 transition-colors duration-500">

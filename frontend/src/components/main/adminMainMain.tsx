@@ -3,9 +3,9 @@ import {
   Drawer,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import MyPage from "../form/myPage";
-import ReserList from "../form/reserList";
-import RoomList from "../form/roomList";
+import MyPage from "../component/form/myPage";
+import ReserList from "../component/list/allReserList";
+import RoomList from "../component/list/roomList";
 
 function AdminMain() {
 

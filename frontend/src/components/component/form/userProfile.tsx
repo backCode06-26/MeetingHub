@@ -21,9 +21,7 @@ function UserProfile({ user, onLogout }: UserProfileProps) {
         <div>
           <strong>닉네임:</strong> {user.username}
         </div>
-        <div>
-          <strong>권한:</strong> {user.role}
-        </div>
+        {user.role === "ROLE_ADMIN" && <div> 관리자<br></br> 화면입니다.</div>}
         <Button variant="outline" onClick={onLogout}>
           로그아웃
         </Button>

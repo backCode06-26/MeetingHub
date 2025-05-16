@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ReserService {
@@ -73,7 +74,16 @@ public class ReserService {
 
     // 읽기
     public ResponseEntity<List<ReserResponseDTO>> readUserRoomReser() {
-        List<ReserResponseDTO> userRoomReserList = reserRepository.findAllWithJoin();
+        List<ReserResponseDTO> userRoomReserList = reserRepository.findAll().stream().map(Reser::toDTO).toList();
+        if(userRoomReserList.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(userRoomReserList);
+    }
+
+    // 현재 사용자의 예약 가져오기
+    public ResponseEntity<List<ReserResponseDTO>> readUserReserByEmail(String email) {
+        List<ReserResponseDTO> userRoomReserList = reserRepository.findByUserEmail(email).stream().map(Reser::toDTO).toList();
         if(userRoomReserList.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }

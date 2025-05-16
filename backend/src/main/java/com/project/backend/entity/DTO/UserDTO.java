@@ -28,7 +28,7 @@ public class UserDTO {
                 .email(this.email)
                 .username(this.username)
                 .password(passwordEncoder.encode(this.password))
-                .role("ROLE_ADMIN")
+                .role("ROLE_USER")
                 .build();
     }
 

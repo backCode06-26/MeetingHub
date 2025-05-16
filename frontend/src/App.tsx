@@ -1,8 +1,8 @@
 import "./App.css";
 import { Route, Routes } from "react-router-dom";
-import GuestMain from "./components/component/main/guestMain";
-import AdminMain from "./components/component/main/adminMainMain";
-import BoardMain from "./components/component/main/boardMain";
+import GuestMain from "./components/main/guestMain";
+import AdminMain from "./components/main/adminMainMain";
+import BoardMain from "./components/main/boardMain";
 
 function App() {
   return (
