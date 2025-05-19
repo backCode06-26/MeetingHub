@@ -1,4 +1,4 @@
-import LoginPage from "../component/form/loginPage";
+import LoginPage from "../component/form/nav/loginPage";
 
 function GuestMain() {
 

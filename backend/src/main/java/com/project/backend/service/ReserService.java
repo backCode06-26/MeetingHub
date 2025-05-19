@@ -14,8 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ReserService {
@@ -33,7 +33,7 @@ public class ReserService {
 
 
     // 생성
-    public ResponseEntity<?> createUserRoomReser(ReserRequestDTO reserRequestDTO) {
+    public ResponseEntity<?> createReser(ReserRequestDTO reserRequestDTO) {
         try {
             // 요청된 시작/끝 시간
             Timestamp newStart = reserRequestDTO.getReserDate();
@@ -44,8 +44,8 @@ public class ReserService {
 
             // 시간 겹침 체크
             for (Reser reser : existingReser) {
-                Timestamp existingStart = reser.getReserDate();
-                Timestamp existingEnd = reser.getUseTime();
+                Timestamp existingStart = reser.getStartDate();
+                Timestamp existingEnd = reser.getEndDate();
                 System.out.println(existingStart);
                 System.out.println(existingEnd);
 
@@ -72,8 +72,8 @@ public class ReserService {
         }
     }
 
-    // 읽기
-    public ResponseEntity<List<ReserResponseDTO>> readUserRoomReser() {
+    // 전체 예약 가져오기
+    public ResponseEntity<List<ReserResponseDTO>> readReserAll() {
         List<ReserResponseDTO> userRoomReserList = reserRepository.findAll().stream().map(Reser::toDTO).toList();
         if(userRoomReserList.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -82,7 +82,7 @@ public class ReserService {
     }
 
     // 현재 사용자의 예약 가져오기
-    public ResponseEntity<List<ReserResponseDTO>> readUserReserByEmail(String email) {
+    public ResponseEntity<List<ReserResponseDTO>> readReserUser(String email) {
         List<ReserResponseDTO> userRoomReserList = reserRepository.findByUserEmail(email).stream().map(Reser::toDTO).toList();
         if(userRoomReserList.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -90,12 +90,32 @@ public class ReserService {
         return ResponseEntity.status(HttpStatus.OK).body(userRoomReserList);
     }
 
+    // 진행중인 예약 가져오기
+    public ResponseEntity<List<ReserResponseDTO>> readReserNowAfter() {
+        Timestamp now = Timestamp.valueOf(LocalDateTime.now());
+        List<ReserResponseDTO> userRoomReserAfterList = reserRepository.findByEndDateAfter(now).stream().map(Reser::toDTO).toList();
+        if (userRoomReserAfterList.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(userRoomReserAfterList);
+    }
+
+    // 완료된 예약 가져오기
+    public ResponseEntity<List<ReserResponseDTO>> readReserNowBefore() {
+        Timestamp now = Timestamp.valueOf(LocalDateTime.now());
+        List<ReserResponseDTO> userRoomReserBeforeList = reserRepository.findByEndDateBefore(now).stream().map(Reser::toDTO).toList();
+        if (userRoomReserBeforeList.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(userRoomReserBeforeList);
+    }
+
     // 수정
-    public ResponseEntity<Reser> updateUserRoomReser(ReserRequestDTO reserRequestDTO) {
+    public ResponseEntity<Reser> updateReser(ReserRequestDTO reserRequestDTO) {
         if(reserRepository.findById(reserRequestDTO.getId()) != null) {
             Reser reser = reserRepository.findById(reserRequestDTO.getId());
-            reser.setReserDate(reserRequestDTO.getReserDate());
-            reser.setUseTime(reserRequestDTO.getUseTime());
+            reser.setStartDate(reserRequestDTO.getReserDate());
+            reser.setEndDate(reserRequestDTO.getUseTime());
 
             return ResponseEntity.status(HttpStatus.OK)
                     .body(reserRepository.save(reser));

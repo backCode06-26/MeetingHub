@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import UserProfile from "@/components/component/form/userProfile";
+import UserProfile from "@/components/component/form/nav/userProfile";
 import logo from "@/assets/pnjl44_j6pb-0_logo.jpg";
 import { useState, useEffect } from "react";
 

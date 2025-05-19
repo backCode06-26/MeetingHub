@@ -24,28 +24,39 @@ public class ReserController {
 
     // 생성
     @PostMapping("/api/reser/create")
-    public ResponseEntity<?> createRoom(
+    public ResponseEntity<?> createReser(
             @RequestBody ReserRequestDTO reserRequestDTO
     ) {
-        return reserService.createUserRoomReser(reserRequestDTO);
+        return reserService.createReser(reserRequestDTO);
     }
 
-    // 읽기
+    // 전체 예약 가져오기
     @GetMapping("/api/reser/all")
-    public ResponseEntity<List<ReserResponseDTO>> readRoom() {
-        return reserService.readUserRoomReser();
+    public ResponseEntity<List<ReserResponseDTO>> readReserAll() {
+        return reserService.readReserAll();
     }
 
     // 현재 사용자 예약 가져오기
     @GetMapping("/api/reser/user")
-    public ResponseEntity<List<ReserResponseDTO>> readUserRoom(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<List<ReserResponseDTO>> readReserUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
         String email = userDetails.getEmail();
-        return reserService.readUserReserByEmail(email);
+        return reserService.readReserUser(email);
+    }
+
+    // 진행 중인 예약 가져오기
+    @GetMapping("/api/reser/after")
+    public ResponseEntity<List<ReserResponseDTO>> readReserAfter() {
+        return reserService.readReserNowAfter();
+    }
+    // 완료된 예약 가져오기
+    @GetMapping("/api/reser/before")
+    public ResponseEntity<List<ReserResponseDTO>> readReserBefore() {
+        return reserService.readReserNowBefore();
     }
 
     // 수정
     @PatchMapping("/api/reser/update")
     public ResponseEntity<Reser> updateRoom(@RequestBody ReserRequestDTO reserRequestDTO) {
-        return reserService.updateUserRoomReser(reserRequestDTO);
+        return reserService.updateReser(reserRequestDTO);
     }
 }

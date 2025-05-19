@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class RoomService {
@@ -54,16 +55,23 @@ public class RoomService {
     // 회의실 삭제
     @Transactional
     public ResponseEntity<List<RoomDTO>> deleteRoom(Long id) {
-        if (roomRepository.findById(id) != null) {
+        if (roomRepository.existsById(id)) {
 
+            // 해당 회의실에 대한 예약 먼저 삭제
             reserRepository.deleteByRoomId(id);
 
-            Room room = roomRepository.findById(id);
-            roomRepository.delete(room);
+            // 회의실 삭제
+            roomRepository.deleteById(id);
 
-            List<RoomDTO> rooms = roomRepository.findAll().stream().map(Room::toDTO).toList();
-            return ResponseEntity.status(HttpStatus.OK).body(rooms);
+            // 전체 회의실 목록 반환
+            List<RoomDTO> rooms = roomRepository.findAll()
+                    .stream()
+                    .map(Room::toDTO)
+                    .toList();
+
+            return ResponseEntity.ok(rooms);
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+
+        return ResponseEntity.badRequest().build();
     }
 }

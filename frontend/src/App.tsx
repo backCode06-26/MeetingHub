@@ -1,7 +1,7 @@
 import "./App.css";
 import { Route, Routes } from "react-router-dom";
 import GuestMain from "./components/main/guestMain";
-import AdminMain from "./components/main/adminMainMain";
+import AdminMain from "./components/main/adminMain";
 import BoardMain from "./components/main/boardMain";
 
 function App() {

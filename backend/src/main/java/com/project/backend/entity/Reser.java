@@ -6,7 +6,7 @@ import lombok.*;
 
 import java.sql.Timestamp;
 
-@Table(name="user_room_reser")
+@Table(name="resers")
 @Entity
 
 @Getter
@@ -27,19 +27,19 @@ public class Reser {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
-    @Column(name = "reser_date", nullable = false)
-    private Timestamp reserDate;
+    @Column(name = "start_date", nullable = false)
+    private Timestamp startDate;
 
-    @Column(name = "use_time", nullable = false)
-    private Timestamp useTime;
+    @Column(name = "end_date", nullable = false)
+    private Timestamp endDate;
 
     @Builder
     public Reser(Long id, User user, Room room, Timestamp reserDate, Timestamp useTime){
         this.id = id;
         this.user = user;
         this.room = room;
-        this.reserDate = reserDate;
-        this.useTime = useTime;
+        this.startDate = reserDate;
+        this.endDate = useTime;
     }
 
     public ReserResponseDTO toDTO(){
@@ -47,8 +47,8 @@ public class Reser {
                 .id(this.id)
                 .username(this.user.getUsername())
                 .roomName(this.room.getRoomName())
-                .reserDate(this.reserDate)
-                .useTime(this.useTime)
+                .reserDate(this.startDate)
+                .useTime(this.endDate)
                 .build();
     }
 }

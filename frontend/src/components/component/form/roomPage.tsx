@@ -16,7 +16,6 @@ import {
   DrawerClose,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -37,9 +36,9 @@ function RoomList() {
   const [updateList, setUpdateList] = useState<Room[]>([]);
 
   const schema = yup.object().shape({
-      roomName : yup.string().required("회의실 이름을 입력해주세요!")
-    });
-  
+    roomName: yup.string().required("회의실 이름을 입력해주세요!"),
+  });
+
   const { register, handleSubmit, setValue } = useForm({
     resolver: yupResolver(schema),
   });
@@ -65,7 +64,6 @@ function RoomList() {
 
   // 회의실의 정보 수정
   const handleChange = (id: number, newName: string) => {
-
     // 수정된 값이 바로 보이게 수정
     setRoomList((prevList: Room[]) =>
       prevList.map((room: Room) =>
@@ -116,14 +114,14 @@ function RoomList() {
   }, []);
 
   // 회의실 추가
-  function createRoom(data : {roomName : string}) {
+  function createRoom(data: { roomName: string }) {
     console.log(data.roomName);
     axios
       .post(
         "/api/room/create",
         { roomName: data.roomName },
         // 다른 형식으로 가는 에러가 있어서 수정정
-        { headers: { "Content-Type": "application/json"} }
+        { headers: { "Content-Type": "application/json" } }
       )
       .then((response) => {
         alert("회의실 생성이 완료되었습니다!");
@@ -143,14 +141,13 @@ function RoomList() {
   }
 
   const onError = (errors: any) => {
-    if(errors.roomName) {
-        alert(errors.roomName.message);
+    if (errors.roomName) {
+      alert(errors.roomName.message);
     }
-  }
+  };
 
   return (
-    <DrawerContent className="w-[50%] m-auto">
-      <form onSubmit={handleSubmit(createRoom, onError)}>
+    <DrawerContent className="w-[50%] mx-auto">
       <DrawerHeader>
         <DrawerTitle>회의실 관리</DrawerTitle>
         <DrawerDescription>
@@ -158,7 +155,7 @@ function RoomList() {
           생성은 이름 입력 후 생성 버튼 클릭, 삭제는 삭제 버튼을 누르면 됩니다.
         </DrawerDescription>
 
-        {/* 회의실 리스트, 거기에서 더블클릭으로 회의실 정보 수정, 버튼으로 삭제 */}
+        {/* 회의실 리스트 */}
         <div className="max-h-60 overflow-auto">
           <Table className="w-[50%] m-auto">
             <TableHeader>
@@ -168,68 +165,63 @@ function RoomList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {roomList.map((data) => {
-                return (
-                  <TableRow key={data.id}>
-                    <TableCell className="font-medium text-center">
-                      <Input
-                        type="text"
-                        value={data.roomName}
-                        onChange={(e) => handleChange(data.id, e.target.value)}
-                        className="text-center border border-none shadow-none"
-                      />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        onClick={() => deleteRoom(data.id)}
-                      >
-                        삭제
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {roomList.map((data) => (
+                <TableRow key={data.id}>
+                  <TableCell className="font-medium text-center">
+                    <Input
+                      type="text"
+                      value={data.roomName}
+                      onChange={(e) => handleChange(data.id, e.target.value)}
+                      className="text-center border border-none shadow-none"
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="outline"
+                      onClick={() => deleteRoom(data.id)}
+                    >
+                      삭제
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              <TableRow>
+                <TableCell colSpan={2} className="text-center">
+                  <Button
+                    type="button"
+                    className="w-[100%] border hover:border-sky-500"
+                    onClick={updateRoom}
+                  >
+                    저장
+                  </Button>
+                </TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         </div>
 
-        {/* 회의실 생성 */}
-        <Input
-          type="text"
-          placeholder="회의실의 이름을 입력해주세요"
-          className="m-1"
-          {...register("roomName")}
-        />
-      </DrawerHeader>
-
-      <DrawerFooter>
-        <div className="flex justify-between flex-wrap">
-          <Button 
-            type="submit"
-            className="w-[50%] border hover:border-sky-500"
-          >
+        {/* 생성용 form만 별도 감싸기 */}
+        <form onSubmit={handleSubmit(createRoom, onError)}>
+          <Input
+            type="text"
+            placeholder="회의실의 이름을 입력해주세요"
+            className="w-full mb-1"
+            {...register("roomName")}
+          />
+          <Button type="submit" className="w-full mb-1 border hover:border-sky-500">
             생성
           </Button>
-          <Button
-            type="button"
-            className="w-[50%] border hover:border-sky-500"
-            onClick={updateRoom}
-          >
-            저장
-          </Button>
-        </div>
-        <DrawerClose>
-          <Button
-            variant="outline"
-            type="button"
-            className="w-[100%] shadow-none hover:bg-gray-200 border hover:border-sky-500"
-          >
-            취소
-          </Button>
-        </DrawerClose>
-      </DrawerFooter>
-      </form>
+          <DrawerClose className="w-full">
+            <Button
+              variant="outline"
+              type="button"
+              className=" w-[100%] shadow-none hover:bg-gray-200 border hover:border-sky-500"
+            >
+              취소
+            </Button>
+          </DrawerClose>
+        </form>
+      </DrawerHeader>
     </DrawerContent>
   );
 }

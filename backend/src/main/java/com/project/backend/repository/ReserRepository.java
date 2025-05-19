@@ -17,10 +17,10 @@ public interface ReserRepository extends JpaRepository<Reser, Integer> {
     // 특정 사용자의 예약을 가져옵니다.
     List<Reser> findByUserEmail(String email);
 
-    // 현재 시간을 지난 예약
-    List<Reser> findByUseTimeBefore(Timestamp nowDate);
-    // 현재 시간 전인 예약
-    List<Reser> findByReserDateAfter(Timestamp nowDate);
+    // 완료된 예약
+    List<Reser> findByEndDateBefore(Timestamp nowDate);
+    // 진행 중인 예약
+    List<Reser> findByEndDateAfter(Timestamp nowDate);
 
     void deleteByRoomId(Long roomId);
 }

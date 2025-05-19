@@ -50,11 +50,17 @@ function formatSafe(date: Date | string) {
     ? format(parsed, "yyyy-MM-dd a hh:mm", { locale: ko })
     : "잘못된 날짜";
 }
-function List() {
+
+type ReserListProps = {
+  url: string;
+  isEdit?: boolean;
+};
+
+function ReserList({ url, isEdit = false }: ReserListProps) {
   const navigate = useNavigate();
 
   const schema = yup.object().shape({
-    reserDate: yup
+    startDate: yup
       .date()
       .typeError("날짜 형식이 올바르지 않습니다!")
       .min(
@@ -62,17 +68,17 @@ function List() {
         "오늘 이전의 날짜를 선택 할 수 없습니다!"
       )
       .required("날짜를 입력해주세요!"),
-    useTime: yup
+    endDate: yup
       .date()
       .typeError("날짜 형식이 올바르지 않습니다!")
       .test(
         "is-time-valid",
         "사용시간은 예약시간보다 최소 5분 이상으로 설정해야합니다!",
         function (value) {
-          const { reserDate } = this.parent;
-          if (!reserDate || !value) return true;
+          const { startDate } = this.parent;
+          if (!startDate || !value) return true;
 
-          const timeDiff = value.getTime() - reserDate.getTime();
+          const timeDiff = value.getTime() - startDate.getTime();
           return timeDiff >= 5 * 60 * 1000;
         }
       )
@@ -82,8 +88,8 @@ function List() {
   const { handleSubmit, setValue, control } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      reserDate: new Date(),
-      useTime: new Date(),
+      startDate: new Date(),
+      endDate: new Date(),
     },
   });
 
@@ -92,18 +98,16 @@ function List() {
 
   const updateReser = (
     id: number,
-    data: { reserDate: Date; useTime: Date }
+    data: { startDate: Date; endDate: Date }
   ) => {
     axios
       .patch("/api/reser/update", {
         id: id,
-        reserDate: data.reserDate,
-        useTime: data.useTime,
+        reserDate: data.startDate,
+        useTime: data.endDate,
       })
       .then((response) => {
         alert("시간이 수정되었습니다!");
-        console.log("변경된 예약 정보", response);
-
         const updatedReser: Reser = {
           id: response.data.id,
           username: response.data.user.username,
@@ -111,12 +115,11 @@ function List() {
           reserDate: new Date(response.data.reserDate),
           useTime: new Date(response.data.useTime),
         };
-        setOpen(() => {
-          const newOpen = [...open];
-          newOpen[id] = !newOpen[id];
+        setOpen((prevOpen) => {
+          const newOpen = [...prevOpen];
+          newOpen[id] = false;
           return newOpen;
         });
-
         setReserList((prev) =>
           prev.map((r) => (r.id === id ? updatedReser : r))
         );
@@ -128,32 +131,25 @@ function List() {
   };
 
   const onError = (errors: any) => {
-    if (errors.reserDate) {
-      alert(errors.reserDate.message);
-    } else if (errors.useTime) {
-      alert(errors.useTime.message);
+    if (errors.startDate) {
+      alert(errors.startDate.message);
+    } else if (errors.endDate) {
+      alert(errors.endDate.message);
     }
   };
 
   useEffect(() => {
-    // 로그인 정보 가져오기
     axios
       .get("/api/user/info", { withCredentials: true })
       .then((response) => {
-        console.log("로그인한 사용자 정보:", response.data);
-
         if (response.data.role === "ROLE_ADMIN") {
           navigate("/admin");
         }
       })
-      .catch((err) => {
-        console.log("로그인 정보 가져오기 실패:", err);
-        navigate("/");
-      });
+      .catch(() => navigate("/"));
 
-    // 예약 정보 가져오기
     axios
-      .get("/api/reser/user")
+      .get("/api/reser/" + url)
       .then((response) => {
         const reserData: Reser[] = response.data.map((data: any) => ({
           id: data.id,
@@ -163,12 +159,11 @@ function List() {
           useTime: new Date(data.useTime),
         }));
         setReserList(reserData);
-        console.log("예약 정보", reserData);
       })
       .catch((error) => {
         console.error("Error fetching reservation data", error);
       });
-  }, []);
+  }, [url, navigate]);
 
   return (
     <Table>
@@ -179,23 +174,21 @@ function List() {
           <TableHead className="text-center">사용자</TableHead>
           <TableHead className="text-center">예약 시간</TableHead>
           <TableHead className="text-right">사용시간</TableHead>
+          {isEdit && <TableHead className="text-center">수정</TableHead>}
         </TableRow>
       </TableHeader>
       <TableBody>
-        {reserList.map((data) => {
-          return (
-            <TableRow key={data.id}>
-              <TableCell className="font-medium">{data.id}</TableCell>
-              <TableCell>{data.roomName}</TableCell>
-              <TableCell>{data.username}</TableCell>
-              <TableCell>{formatSafe(data.reserDate)}</TableCell>
-              <TableCell className="text-right">
-                {formatSafe(data.useTime)}
-              </TableCell>
-
-              <TableCell>
+        {reserList.map((data) => (
+          <TableRow key={data.id}>
+            <TableCell className="font-medium text-center">{data.id}</TableCell>
+            <TableCell className="text-center">{data.roomName}</TableCell>
+            <TableCell className="text-center">{data.username}</TableCell>
+            <TableCell className="text-center">{formatSafe(data.reserDate)}</TableCell>
+            <TableCell className="text-right">{formatSafe(data.useTime)}</TableCell>
+            {isEdit && (
+              <TableCell className="text-center">
                 <Dialog
-                  open={open[data.id]}
+                  open={open[data.id] || false}
                   onOpenChange={(isOpen) => {
                     const newOpen = [...open];
                     newOpen[data.id] = isOpen;
@@ -213,12 +206,11 @@ function List() {
                       )}
                     >
                       <DialogHeader>
-                        <DialogTitle>정보수정/삭제</DialogTitle>
+                        <DialogTitle>정보수정</DialogTitle>
                         <DialogDescription>
                           예약 시간과 사용시간을 수정할 수 있습니다!
                         </DialogDescription>
 
-                        {/* 예약시간 */}
                         <Popover>
                           <PopoverTrigger asChild className="m-auto">
                             <Button
@@ -238,12 +230,9 @@ function List() {
                               )}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent
-                            className="w-[400px] p-0 border-none"
-                            align="center"
-                          >
+                          <PopoverContent className="w-[400px] p-0 border-none" align="center">
                             <Controller
-                              name="reserDate"
+                              name="startDate"
                               control={control}
                               render={({ field }) => (
                                 <DatePicker
@@ -261,7 +250,6 @@ function List() {
                           </PopoverContent>
                         </Popover>
 
-                        {/* 사용시간 */}
                         <Popover>
                           <PopoverTrigger asChild className="m-auto">
                             <Button
@@ -281,12 +269,9 @@ function List() {
                               )}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent
-                            className="w-[400px] p-0 border-none"
-                            align="center"
-                          >
+                          <PopoverContent className="w-[400px] p-0 border-none" align="center">
                             <Controller
-                              name="useTime"
+                              name="endDate"
                               control={control}
                               render={({ field }) => (
                                 <DatePicker
@@ -312,10 +297,10 @@ function List() {
                           type="button"
                           onClick={() => {
                             const newOpen = [...open];
-                            newOpen[data.id] = !newOpen[data.id];
+                            newOpen[data.id] = false;
                             setOpen(newOpen);
-                            setValue("reserDate", new Date());
-                            setValue("useTime", new Date());
+                            setValue("startDate", new Date());
+                            setValue("endDate", new Date());
                           }}
                         >
                           닫기
@@ -325,12 +310,12 @@ function List() {
                   </DialogContent>
                 </Dialog>
               </TableCell>
-            </TableRow>
-          );
-        })}
+            )}
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
   );
 }
 
-export default List;
+export default ReserList;
