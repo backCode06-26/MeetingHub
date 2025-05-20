@@ -14,14 +14,16 @@ public class ReserResponseDTO {
     private String username;
     private String roomName;
     private Timestamp reserDate;
-    private Timestamp useTime;
+    private double startDate;
+    private double endDate;
 
     @Builder
-    public ReserResponseDTO(Long id, String username, String roomName, Timestamp reserDate, Timestamp useTime){
+    public ReserResponseDTO(Long id, String username, String roomName, Timestamp reserDate, double startDate, double endDate){
         this.id = id;
         this.username = username;
         this.roomName = roomName;
         this.reserDate = reserDate;
-        this.useTime = useTime;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 }

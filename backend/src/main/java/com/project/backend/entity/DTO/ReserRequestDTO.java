@@ -18,10 +18,9 @@ public class ReserRequestDTO {
     private Long id;
     private String email;
     private Long roomId;
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     private Timestamp reserDate;
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-    private Timestamp useTime;
+    private double startDate;
+    private double endDate;
 
     public Reser toEntity(User user, Room room) {
         return Reser.builder()
@@ -29,7 +28,8 @@ public class ReserRequestDTO {
                 .user(user)
                 .room(room)
                 .reserDate(this.reserDate)
-                .useTime(this.useTime)
+                .startDate(this.startDate)
+                .endDate(this.endDate)
                 .build();
     }
 }

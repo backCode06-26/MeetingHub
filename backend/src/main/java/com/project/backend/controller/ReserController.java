@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 @RestController
@@ -52,6 +53,11 @@ public class ReserController {
     @GetMapping("/api/reser/before")
     public ResponseEntity<List<ReserResponseDTO>> readReserBefore() {
         return reserService.readReserNowBefore();
+    }
+
+    @GetMapping("/api/reser/time/{date}")
+    public ResponseEntity<List<Double>> readReserTime(@PathVariable String date) {
+        return reserService.readTimeByReserDate(date);
     }
 
     // 수정

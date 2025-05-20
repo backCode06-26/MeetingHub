@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Table(name="resers")
 @Entity
@@ -27,19 +28,23 @@ public class Reser {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
+    @Column(name = "reser_date", nullable = false)
+    private Timestamp reserDate;
+
     @Column(name = "start_date", nullable = false)
-    private Timestamp startDate;
+    private double startDate;
 
     @Column(name = "end_date", nullable = false)
-    private Timestamp endDate;
+    private double endDate;
 
     @Builder
-    public Reser(Long id, User user, Room room, Timestamp reserDate, Timestamp useTime){
+    public Reser(Long id, User user, Room room, Timestamp reserDate, double startDate, double endDate){
         this.id = id;
         this.user = user;
         this.room = room;
-        this.startDate = reserDate;
-        this.endDate = useTime;
+        this.reserDate = reserDate;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
     public ReserResponseDTO toDTO(){
@@ -47,8 +52,9 @@ public class Reser {
                 .id(this.id)
                 .username(this.user.getUsername())
                 .roomName(this.room.getRoomName())
-                .reserDate(this.startDate)
-                .useTime(this.endDate)
+                .reserDate(this.reserDate)
+                .startDate(this.startDate)
+                .endDate(this.endDate)
                 .build();
     }
 }
