@@ -34,9 +34,13 @@ function Join() {
       ),
   });
 
-  const { register, handleSubmit } = useForm({
-      resolver: yupResolver(schema),
-    });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(schema),
+  });
 
   const joinProc = (data: {
     username: string;
@@ -56,26 +60,14 @@ function Join() {
       });
   };
 
-  const onError = (errors : any) => {
-    if(errors.username) {
-      alert(errors.username.message)
-    } else if(errors.email) {
-      alert(errors.email.message)
-    } else if(errors.password) {
-      alert(errors.password.message)
-    }
-  }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" onClick={() => setOpen(true)}>
-          회원가입
-        </Button>
+        <Button variant="outline">회원가입</Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[425px]">
-        <form onSubmit={handleSubmit(joinProc, onError)}>
+        <form onSubmit={handleSubmit(joinProc)}>
           <DialogHeader>
             <DialogTitle>회원가입</DialogTitle>
             <DialogDescription>
@@ -92,16 +84,20 @@ function Join() {
                 className="col-span-3"
                 {...register("username")}
               />
+              {errors.username && (
+                <p className="text-red-500 mt-1 text-sm  col-span-4">
+                  {errors.username.message}
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="email" className="text-right">
                 이메일
               </Label>
-              <Input
-                id="email"
-                className="col-span-3"
-                {...register("email")}
-              />
+              <Input id="email" className="col-span-3" {...register("email")} />
+              {errors.email && (
+                <p className="text-red-500 mt-1 text-sm  col-span-4">{errors.email.message}</p>
+              )}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="password" className="text-right">
@@ -109,16 +105,19 @@ function Join() {
               </Label>
               <Input
                 id="password"
-                className="col-span-3"
                 type="password"
+                className="col-span-3"
                 {...register("password")}
               />
+              {errors.password && (
+                <p className="text-red-500 mt-1 text-sm col-span-4">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">
-              회원가입
-            </Button>
+            <Button type="submit">회원가입</Button>
           </DialogFooter>
         </form>
       </DialogContent>

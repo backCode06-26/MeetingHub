@@ -39,7 +39,12 @@ function RoomList() {
     roomName: yup.string().required("회의실 이름을 입력해주세요!"),
   });
 
-  const { register, handleSubmit, setValue } = useForm({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm({
     resolver: yupResolver(schema),
   });
 
@@ -47,7 +52,7 @@ function RoomList() {
   const deleteRoom = (id: number) => {
     if (confirm("정말로 삭제하시겠습니다?")) {
       axios
-        .delete(`api/room/delete/${id}`)
+        .delete(`/api/room/delete/${id}`)
         .then((response) => {
           alert("회의실 삭제가 완료되었습니다!");
           console.log(response);
@@ -71,37 +76,46 @@ function RoomList() {
       )
     );
 
-    // DB로 따로 보내야하는 값은 따로 저장
-    setUpdateList((prev) => [...prev, { id: id, roomName: newName }]);
+    // 중복 없이 업데이트 리스트에 저장
+    setUpdateList((prev) => {
+      const existIndex = prev.findIndex((room) => room.id === id);
+      if (existIndex !== -1) {
+        const newList = [...prev];
+        newList[existIndex] = { id, roomName: newName };
+        return newList;
+      } else {
+        return [...prev, { id, roomName: newName }];
+      }
+    });
   };
 
   // 회의실 수정
   const updateRoom = () => {
     const requests = updateList.map((room) => {
-      axios.patch("/api/room/update", room);
+      return axios.patch("/api/room/update", room);
     });
 
-    // 모든 처리가 끝나고 성공한다면 알림림
+    // 모든 처리가 끝나고 성공한다면 알림 및 updateList 초기화
     Promise.all(requests)
       .then((response) => {
         alert("회의실 수정이 완료되었습니다.");
+        setUpdateList([]);
         console.log("회의실 수정", response);
       })
-      // 처리 하는 도중에 실패하면 알림
       .catch((err) => {
         alert("회의실 수정을 실패했습니다.");
         console.log("회의실 수정 실패", err);
       });
   };
 
-  // 회의실 정보 가져오기기
+  // 회의실 정보 가져오기
   useEffect(() => {
     axios
       .get("/api/room/all")
       .then((response) => {
         console.log("회의실 정보", response);
 
-        // 가져온 데이터 저장장
+        // 가져온 데이터 저장
         const roomData: Room[] = response.data.map((room: any) => ({
           id: room.id,
           roomName: room.roomName,
@@ -120,7 +134,7 @@ function RoomList() {
       .post(
         "/api/room/create",
         { roomName: data.roomName },
-        // 다른 형식으로 가는 에러가 있어서 수정정
+        // 다른 형식으로 가는 에러가 있어서 수정
         { headers: { "Content-Type": "application/json" } }
       )
       .then((response) => {
@@ -139,12 +153,6 @@ function RoomList() {
         console.log(err);
       });
   }
-
-  const onError = (errors: any) => {
-    if (errors.roomName) {
-      alert(errors.roomName.message);
-    }
-  };
 
   return (
     <DrawerContent className="w-[50%] mx-auto">
@@ -201,21 +209,30 @@ function RoomList() {
         </div>
 
         {/* 생성용 form만 별도 감싸기 */}
-        <form onSubmit={handleSubmit(createRoom, onError)}>
+        <form onSubmit={handleSubmit(createRoom)}>
           <Input
             type="text"
             placeholder="회의실의 이름을 입력해주세요"
             className="w-full mb-1"
             {...register("roomName")}
           />
-          <Button type="submit" className="w-full mb-1 border hover:border-sky-500">
+          {errors.roomName && (
+            <p className="text-red-500 mt-1 text-sm col-span-4">
+              {errors.roomName.message}
+            </p>
+          )}
+          <Button
+            type="submit"
+            className="w-full mb-1 border hover:border-sky-500"
+          >
             생성
           </Button>
           <DrawerClose className="w-full">
+            {/* DrawerClose가 버튼 역할이므로 내부에 버튼 태그를 제거하거나 적절히 수정 필요 */}
             <Button
               variant="outline"
               type="button"
-              className=" w-[100%] shadow-none hover:bg-gray-200 border hover:border-sky-500"
+              className="w-[100%] shadow-none hover:bg-gray-200 border hover:border-sky-500"
             >
               취소
             </Button>

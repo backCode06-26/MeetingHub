@@ -30,7 +30,11 @@ function Login() {
     password: yup.string().required("비밀번호를 입력해주세요!"),
   });
 
-  const { register, handleSubmit } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
     resolver: yupResolver(schema),
   });
 
@@ -54,7 +58,6 @@ function Login() {
   };
 
   const loginProc = (data: { email: string; password: string }) => {
-    // 로그인 처리
     axios
       .post("/api/loginProc", qs.stringify(data), {
         withCredentials: true,
@@ -73,24 +76,14 @@ function Login() {
       });
   };
 
-  const onError = (errors: any) => {
-    if (errors.email) {
-      alert(errors.email.message);
-    } else if (errors.password) {
-      alert(errors.password.message);
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" onClick={() => setOpen(true)}>
-          로그인
-        </Button>
+        <Button variant="outline">로그인</Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[425px]">
-        <form onSubmit={handleSubmit(loginProc, onError)}>
+        <form onSubmit={handleSubmit(loginProc)}>
           <DialogHeader>
             <DialogTitle>로그인</DialogTitle>
             <DialogDescription>
@@ -108,6 +101,11 @@ function Login() {
                 className="col-span-3"
                 {...register("email")}
               />
+              {errors.email && (
+                <p className="text-red-500 mt-1 text-sm col-span-4">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="password" className="text-right">
@@ -119,6 +117,11 @@ function Login() {
                 className="col-span-3"
                 {...register("password")}
               />
+              {errors.password && (
+                <p className="text-red-500 mt-1 text-sm col-span-4">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>

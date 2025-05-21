@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 import { ko } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import axios from "axios";
-import * as yup from "yup";
 import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -26,7 +24,7 @@ type FormValues = {
   endDate: number;
 };
 
-function Timer({ isEdit = false } : { isEdit?: boolean}) {
+function Timer({ isEdit = false }: { isEdit?: boolean }) {
   const navigate = useNavigate();
 
   const yesterDay = new Date();
@@ -43,30 +41,21 @@ function Timer({ isEdit = false } : { isEdit?: boolean}) {
   const [date, setDate] = useState<Date>(new Date());
   const [room, setRoomName] = useState<Room | undefined>(undefined);
 
-  // 유효성 검사 스키마
-  const schema = yup.object().shape({
-    email: yup.string().required("이메일을 입력해주시요"),
-    roomId: yup.number().required("회의실을 선택해주세요"),
-    reserDate: yup
-      .date()
-      .typeError("날짜 형식이 올바르지 않습니다!")
-      .min(yesterDay, "오늘 이전의 날짜를 선택할 수 없습니다!")
-      .required("예약날짜를 입력해주세요!"),
-    startDate: yup.number().required("날짜를 선택해주세요"),
-    endDate: yup.number().required("날짜를 선택해주세요"),
+  const {
+    handleSubmit,
+    setValue,
+    getValues,
+    reset,
+    register,
+  } = useForm<FormValues>({
+    defaultValues: {
+      email: "",
+      roomId: 0,
+      reserDate: new Date(),
+      startDate: 0,
+      endDate: 0,
+    },
   });
-
-  const { handleSubmit, setValue, getValues, reset, register } =
-    useForm<FormValues>({
-      resolver: yupResolver(schema),
-      defaultValues: {
-        email: "",
-        roomId: 0,
-        reserDate: new Date(),
-        startDate: 0,
-        endDate: 0,
-      },
-    });
 
   useEffect(() => {
     // 회의실 목록 조회
@@ -85,9 +74,9 @@ function Timer({ isEdit = false } : { isEdit?: boolean}) {
       const times: Time[] = response.data.map((time: any) => ({
         time: time,
       }));
-      console.log(times);
       setTimeList(times);
     });
+
     // 사용자 정보 조회
     axios
       .get("/api/user/info", { withCredentials: true })
@@ -96,7 +85,7 @@ function Timer({ isEdit = false } : { isEdit?: boolean}) {
         console.error("로그인 정보 불러오기 실패:", err);
         navigate("/");
       });
-  }, [navigate, setValue]);
+  }, [navigate, setValue, getValues]);
 
   // 시작 시간과 종료 시간 업데이트 함수
   const updateStartEndDate = (times: number[]) => {
@@ -114,7 +103,6 @@ function Timer({ isEdit = false } : { isEdit?: boolean}) {
     setValue("endDate", end);
   };
 
-  // `date` 또는 `selectedTimes`가 변경될 때 `updateStartEndDate` 호출
   useEffect(() => {
     updateStartEndDate(selectedTimes);
   }, [date, selectedTimes, setValue]);
@@ -122,7 +110,6 @@ function Timer({ isEdit = false } : { isEdit?: boolean}) {
   // 시간을 추가하는 함수
   const handleAddTime = (value: number) => {
     if (selectedTimes.includes(value)) {
-      // 이미 선택된 시간은 무시
       return;
     }
 
@@ -154,6 +141,7 @@ function Timer({ isEdit = false } : { isEdit?: boolean}) {
     setSelectedTimes(newSelected);
     updateStartEndDate(newSelected);
   };
+
   // 회의실 선택 함수
   const handleSelectRoom = (selectedRoom: Room) => {
     setRoomName(selectedRoom);
@@ -161,10 +149,48 @@ function Timer({ isEdit = false } : { isEdit?: boolean}) {
     setRoomActive(false);
   };
 
+  // 자체 유효성 검사 함수
+  const validateForm = (data: FormValues) => {
+    if (!data.email) {
+      alert("이메일을 입력해주시요");
+      return false;
+    }
+    if (!data.roomId || data.roomId === 0) {
+      alert("회의실을 선택해주세요");
+      return false;
+    }
+    if (!(data.reserDate instanceof Date) || isNaN(data.reserDate.getTime())) {
+      alert("날짜 형식이 올바르지 않습니다!");
+      return false;
+    }
+    if (data.reserDate < yesterDay) {
+      alert("오늘 이전의 날짜를 선택할 수 없습니다!");
+      return false;
+    }
+    if (selectedTimes.length > 1) {
+      if (!data.startDate || data.startDate === 0) {
+        alert("시작 시간을 선택해주세요");
+        return false;
+      }
+      if (!data.endDate || data.endDate === 0) {
+        alert("종료 시간을 선택해주세요");
+        return false;
+      }
+    } else if (selectedTimes.length === 0) {
+      alert("시간을 선택해주세요");
+      return false;
+    } else {
+      alert("2개 이상의 시간을 선택해주세요");
+      return false;
+    }
+    return true;
+  };
+
   // 예약 요청 함수
   const createReser = (data: FormValues) => {
-    console.log(data);
-    const url = isEdit ? "/api/reser/create" : "/api/reser/update";
+    if (!validateForm(data)) return;
+
+    const url = isEdit ? "/api/reser/update" : "/api/reser/create";
 
     axios
       .post(url, data)
@@ -180,18 +206,9 @@ function Timer({ isEdit = false } : { isEdit?: boolean}) {
       });
   };
 
-  // 유효성 검사 실패 시 경고
-  const onError = (errors: any) => {
-    if (errors.email) alert(errors.email.message);
-    else if (errors.roomId) alert(errors.roomId.message);
-    else if (errors.reserDate) alert(errors.reserDate.message);
-    else if (errors.startDate) alert(errors.startDate.message);
-    else if (errors.endDate) alert(errors.endDate.message);
-  };
-
   return (
     <form
-      onSubmit={handleSubmit(createReser, onError)}
+      onSubmit={handleSubmit(createReser)}
       className="w-full m-auto"
     >
       {/* 회의실 선택 */}
@@ -210,10 +227,9 @@ function Timer({ isEdit = false } : { isEdit?: boolean}) {
         </button>
         <div
           className={`w-full absolute top-[40px] left-0 border border-1 border-sky-200 rounded-[15px] transition-all duration-200 bg-white
-            ${
-              roomActive
-                ? "block pointer-events-auto"
-                : "hidden pointer-events-none"
+            ${roomActive
+              ? "block pointer-events-auto"
+              : "hidden pointer-events-none"
             }`}
         >
           {rooms.map((roomItem) => (
@@ -235,9 +251,8 @@ function Timer({ isEdit = false } : { isEdit?: boolean}) {
         <div className="w-1/2">
           <button
             type="button"
-            className={`w-full py-2 ${
-              dateActive === "date" ? "bg-sky-300 text-white" : "bg-white"
-            }`}
+            className={`w-full py-2 ${dateActive === "date" ? "bg-sky-300 text-white" : "bg-white"
+              }`}
             onClick={() => setDateActive("date")}
           >
             날짜
@@ -246,9 +261,8 @@ function Timer({ isEdit = false } : { isEdit?: boolean}) {
         <div className="w-1/2">
           <button
             type="button"
-            className={`w-full py-2 ${
-              dateActive === "time" ? "bg-sky-300 text-white" : "bg-white"
-            }`}
+            className={`w-full py-2 ${dateActive === "time" ? "bg-sky-300 text-white" : "bg-white"
+              }`}
             onClick={() => setDateActive("time")}
           >
             시간
@@ -284,11 +298,10 @@ function Timer({ isEdit = false } : { isEdit?: boolean}) {
             <div className="w-1/2">
               <button
                 type="button"
-                className={`w-full ${
-                  timeActive === "AM"
-                    ? "font-bold border border-1 border-sky-200"
-                    : "font-normal"
-                }`}
+                className={`w-full ${timeActive === "AM"
+                  ? "font-bold border border-1 border-sky-200"
+                  : "font-normal"
+                  }`}
                 onClick={() => setTimeActive("AM")}
               >
                 오전
@@ -297,11 +310,10 @@ function Timer({ isEdit = false } : { isEdit?: boolean}) {
             <div className="w-1/2">
               <button
                 type="button"
-                className={`w-full ${
-                  timeActive === "PM"
-                    ? "font-bold border border-1 border-sky-200"
-                    : "font-normal"
-                }`}
+                className={`w-full ${timeActive === "PM"
+                  ? "font-bold border border-1 border-sky-200"
+                  : "font-normal"
+                  }`}
                 onClick={() => setTimeActive("PM")}
               >
                 오후
@@ -309,47 +321,40 @@ function Timer({ isEdit = false } : { isEdit?: boolean}) {
             </div>
           </div>
 
-          {/* 시간 선택 */}
-          <div className="h-[300px] overflow-hidden hover:overflow-auto border border-1 border-sky-200 rounded-sm">
-            {times.map((time) => {
-              const useTime = time.time;
+          {/* 시간 선택 버튼 */}
+          <div className="grid grid-cols-4 gap-2 mb-3">
+            {times
+              .filter((t) => (timeActive === "AM" ? t.time < 12 : t.time >= 12))
+              .map(({ time }) => {
+                const hour = Math.floor(time);
+                const minute = time % 1 === 0.5 ? "30" : "00";
 
-              const hour = Math.floor(useTime);
-              const minutes = useTime % 1 > 0 ? "30" : "0";
-
-              const label = `${
-                timeActive === "AM" ? "오전" : "오후"
-              } ${hour}시 ${minutes}분`;
-              const value =
-                (timeActive === "AM" ? hour : hour + 12) +
-                (minutes === "30" ? 0.5 : 0);
-              const isSelected = selectedTimes.includes(value);
-              return (
-                <div key={value} className="bg-white">
+                return (
                   <button
+                    key={time}
                     type="button"
-                    className={`w-full py-3 border border-sky-200 hover:bg-gray-300 ${
-                      isSelected ? "bg-sky-100 hover:bg-sky-100" : ""
-                    }`}
-                    onClick={() => handleAddTime(value)}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      handleRemoveTime(value);
+                    className={`rounded border px-2 py-1 ${selectedTimes.includes(time)
+                        ? "bg-sky-400 text-white"
+                        : "bg-white"
+                      }`}
+                    onClick={() => {
+                      if (selectedTimes.includes(time)) {
+                        handleRemoveTime(time);
+                      } else {
+                        handleAddTime(time);
+                      }
                     }}
                   >
-                    {label}
+                    {hour}:{minute}
                   </button>
-                </div>
-              );
-            })}
-            <div>선택된 시간: {selectedTimes.join(", ")}</div>
+                );
+              })}
           </div>
         </>
       )}
 
-      {/* 제출 버튼 */}
-      <Button type="submit" className="w-full border hover:border-sky-500 mt-4">
-        생성
+      <Button type="submit" className="w-full">
+        {isEdit ? "예약 수정" : "예약 등록"}
       </Button>
     </form>
   );
