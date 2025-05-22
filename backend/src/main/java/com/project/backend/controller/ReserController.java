@@ -6,11 +6,13 @@ import com.project.backend.entity.DTO.ReserResponseDTO;
 import com.project.backend.entity.Reser;
 import com.project.backend.service.ReserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -25,9 +27,7 @@ public class ReserController {
 
     // 생성
     @PostMapping("/api/reser/create")
-    public ResponseEntity<?> createReser(
-            @RequestBody ReserRequestDTO reserRequestDTO
-    ) {
+    public ResponseEntity<?> createReser(@RequestBody ReserRequestDTO reserRequestDTO) {
         return reserService.createReser(reserRequestDTO);
     }
 
@@ -55,9 +55,16 @@ public class ReserController {
         return reserService.readReserNowBefore();
     }
 
-    @GetMapping("/api/reser/time/{date}")
-    public ResponseEntity<List<Double>> readReserTime(@PathVariable String date) {
-        return reserService.readTimeByReserDate(date);
+    @GetMapping("/api/reser/time")
+    public ResponseEntity<List<Double>> readReserTime(
+            @RequestParam("roomId")
+            Long roomId,
+
+            @RequestParam("reserDate")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate reserDate
+    ) {
+        return reserService.readTimeByReserDate(roomId, reserDate);
     }
 
     // 수정

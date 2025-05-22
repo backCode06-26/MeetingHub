@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { useOpenArray } from "../hook/openArrayContext";
 
 type Room = {
   id: number;
@@ -24,7 +25,11 @@ type FormValues = {
   endDate: number;
 };
 
-function Timer({ isEdit = false }: { isEdit?: boolean }) {
+type TimerProps = {
+  reserId: number;
+}
+
+function Timer({ reserId }: TimerProps) {
   const navigate = useNavigate();
 
   const yesterDay = new Date();
@@ -33,29 +38,25 @@ function Timer({ isEdit = false }: { isEdit?: boolean }) {
   const [roomActive, setRoomActive] = useState<boolean>(false);
   const [dateActive, setDateActive] = useState<"date" | "time">("date");
   const [timeActive, setTimeActive] = useState<"AM" | "PM">("AM");
+  const { id, openArray, setOpenArray } = useOpenArray();
 
   const [selectedTimes, setSelectedTimes] = useState<number[]>([]);
   const [rooms, setRoomList] = useState<Room[]>([]);
-  const [times, setTimeList] = useState<Time[]>([]);
+  const [times, setTimeList] = useState<Time[] | undefined>(undefined);
 
   const [date, setDate] = useState<Date>(new Date());
-  const [room, setRoomName] = useState<Room | undefined>(undefined);
+  const [room, setRoomName] = useState<Room>();
 
-  const {
-    handleSubmit,
-    setValue,
-    getValues,
-    reset,
-    register,
-  } = useForm<FormValues>({
-    defaultValues: {
-      email: "",
-      roomId: 0,
-      reserDate: new Date(),
-      startDate: 0,
-      endDate: 0,
-    },
-  });
+  const { handleSubmit, setValue, getValues, reset, register } =
+    useForm<FormValues>({
+      defaultValues: {
+        email: "",
+        roomId: 0,
+        reserDate: new Date(),
+        startDate: 0,
+        endDate: 0,
+      },
+    });
 
   useEffect(() => {
     // 회의실 목록 조회
@@ -65,16 +66,6 @@ function Timer({ isEdit = false }: { isEdit?: boolean }) {
         roomName: room.roomName,
       }));
       setRoomList(rooms);
-    });
-
-    const selecteDate = getValues("reserDate");
-    const formattedDate = format(selecteDate, "yyyy-MM-dd");
-
-    axios.get(`/api/reser/time/${formattedDate}`).then((response) => {
-      const times: Time[] = response.data.map((time: any) => ({
-        time: time,
-      }));
-      setTimeList(times);
     });
 
     // 사용자 정보 조회
@@ -106,6 +97,21 @@ function Timer({ isEdit = false }: { isEdit?: boolean }) {
   useEffect(() => {
     updateStartEndDate(selectedTimes);
   }, [date, selectedTimes, setValue]);
+
+  // 시간을 가져오는 함수
+  const updateSelectTimes = (id: number) => {
+    const reserDate = format(date, "yyyy-MM-dd");
+    axios
+      .get(`/api/reser/time?roomId=${id}&reserDate=${reserDate}`)
+      .then((response) => {
+        console.log(response);
+        const times: Time[] = response.data.map((time: any) => ({
+          time: time,
+        }));
+
+        setTimeList(times);
+      });
+  };
 
   // 시간을 추가하는 함수
   const handleAddTime = (value: number) => {
@@ -146,6 +152,7 @@ function Timer({ isEdit = false }: { isEdit?: boolean }) {
   const handleSelectRoom = (selectedRoom: Room) => {
     setRoomName(selectedRoom);
     setValue("roomId", selectedRoom.id, { shouldValidate: true });
+    updateSelectTimes(selectedRoom.id);
     setRoomActive(false);
   };
 
@@ -190,13 +197,27 @@ function Timer({ isEdit = false }: { isEdit?: boolean }) {
   const createReser = (data: FormValues) => {
     if (!validateForm(data)) return;
 
-    const url = isEdit ? "/api/reser/update" : "/api/reser/create";
+    const reser = {
+      id: reserId,
+      email: data.email,
+      roomId: data.roomId,
+      reserDate: format(data.reserDate, "yyyy-MM-dd"),
+      startDate: data.startDate,
+      endDate: data.endDate,
+    };
+    console.log(reser);
 
-    axios
-      .post(url, data)
+    const url = "/api/reser/update";
+    const method = axios.patch;
+
+    method(url, reser)
       .then(() => {
         alert("작업이 완료되었습니다.");
         reset();
+
+        const newOpen = [...openArray];
+        newOpen[id] = false;
+        setOpenArray(newOpen);
         setSelectedTimes([]);
         setRoomName(undefined);
       })
@@ -207,10 +228,7 @@ function Timer({ isEdit = false }: { isEdit?: boolean }) {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(createReser)}
-      className="w-full m-auto"
-    >
+    <form onSubmit={handleSubmit(createReser)} className="w-full m-auto">
       {/* 회의실 선택 */}
       <div
         {...register("roomId")}
@@ -227,9 +245,10 @@ function Timer({ isEdit = false }: { isEdit?: boolean }) {
         </button>
         <div
           className={`w-full absolute top-[40px] left-0 border border-1 border-sky-200 rounded-[15px] transition-all duration-200 bg-white
-            ${roomActive
-              ? "block pointer-events-auto"
-              : "hidden pointer-events-none"
+            ${
+              roomActive
+                ? "block pointer-events-auto"
+                : "hidden pointer-events-none"
             }`}
         >
           {rooms.map((roomItem) => (
@@ -251,8 +270,9 @@ function Timer({ isEdit = false }: { isEdit?: boolean }) {
         <div className="w-1/2">
           <button
             type="button"
-            className={`w-full py-2 ${dateActive === "date" ? "bg-sky-300 text-white" : "bg-white"
-              }`}
+            className={`w-full py-2 ${
+              dateActive === "date" ? "bg-sky-300 text-white" : "bg-white"
+            }`}
             onClick={() => setDateActive("date")}
           >
             날짜
@@ -261,8 +281,9 @@ function Timer({ isEdit = false }: { isEdit?: boolean }) {
         <div className="w-1/2">
           <button
             type="button"
-            className={`w-full py-2 ${dateActive === "time" ? "bg-sky-300 text-white" : "bg-white"
-              }`}
+            className={`w-full py-2 ${
+              dateActive === "time" ? "bg-sky-300 text-white" : "bg-white"
+            }`}
             onClick={() => setDateActive("time")}
           >
             시간
@@ -280,6 +301,7 @@ function Timer({ isEdit = false }: { isEdit?: boolean }) {
             if (selectedDate) {
               setDate(selectedDate);
               setValue("reserDate", selectedDate);
+
               // 날짜 변경 시 시간 초기화
               setSelectedTimes([]);
               setValue("startDate", 0);
@@ -298,10 +320,11 @@ function Timer({ isEdit = false }: { isEdit?: boolean }) {
             <div className="w-1/2">
               <button
                 type="button"
-                className={`w-full ${timeActive === "AM"
-                  ? "font-bold border border-1 border-sky-200"
-                  : "font-normal"
-                  }`}
+                className={`w-full ${
+                  timeActive === "AM"
+                    ? "font-bold border border-1 border-sky-200"
+                    : "font-normal"
+                }`}
                 onClick={() => setTimeActive("AM")}
               >
                 오전
@@ -310,10 +333,11 @@ function Timer({ isEdit = false }: { isEdit?: boolean }) {
             <div className="w-1/2">
               <button
                 type="button"
-                className={`w-full ${timeActive === "PM"
-                  ? "font-bold border border-1 border-sky-200"
-                  : "font-normal"
-                  }`}
+                className={`w-full ${
+                  timeActive === "PM"
+                    ? "font-bold border border-1 border-sky-200"
+                    : "font-normal"
+                }`}
                 onClick={() => setTimeActive("PM")}
               >
                 오후
@@ -323,38 +347,47 @@ function Timer({ isEdit = false }: { isEdit?: boolean }) {
 
           {/* 시간 선택 버튼 */}
           <div className="grid grid-cols-4 gap-2 mb-3">
-            {times
-              .filter((t) => (timeActive === "AM" ? t.time < 12 : t.time >= 12))
-              .map(({ time }) => {
-                const hour = Math.floor(time);
-                const minute = time % 1 === 0.5 ? "30" : "00";
+            {!times ? (
+              <div className="col-span-4 text-center my-5">
+                회의실을 먼저 선택해야지 <br></br>남은 시간을 찾을 수 있습니다.
+              </div>
+            ) : (
+              times
+                .filter((t) =>
+                  timeActive === "AM" ? t.time < 12 : t.time >= 12
+                )
+                .map(({ time }) => {
+                  const hour = Math.floor(time);
+                  const minute = time % 1 === 0.5 ? "30" : "00";
 
-                return (
-                  <button
-                    key={time}
-                    type="button"
-                    className={`rounded border px-2 py-1 ${selectedTimes.includes(time)
-                        ? "bg-sky-400 text-white"
-                        : "bg-white"
+                  return (
+                    <button
+                      key={time}
+                      type="button"
+                      className={`rounded border px-2 py-1 ${
+                        selectedTimes.includes(time)
+                          ? "bg-sky-400 text-white"
+                          : "bg-white"
                       }`}
-                    onClick={() => {
-                      if (selectedTimes.includes(time)) {
-                        handleRemoveTime(time);
-                      } else {
-                        handleAddTime(time);
-                      }
-                    }}
-                  >
-                    {hour}:{minute}
-                  </button>
-                );
-              })}
+                      onClick={() => {
+                        if (selectedTimes.includes(time)) {
+                          handleRemoveTime(time);
+                        } else {
+                          handleAddTime(time);
+                        }
+                      }}
+                    >
+                      {hour}:{minute}
+                    </button>
+                  );
+                })
+            )}
           </div>
         </>
       )}
 
       <Button type="submit" className="w-full">
-        {isEdit ? "예약 수정" : "예약 등록"}
+        예약 수정
       </Button>
     </form>
   );

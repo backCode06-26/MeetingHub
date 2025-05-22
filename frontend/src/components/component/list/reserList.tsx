@@ -17,7 +17,8 @@ import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
-import Timer from "../form/timer";
+import Timer from "../form/updateTimber";
+import { OpenArrayContext } from "../hook/openArrayContext";
 
 type Reser = {
   id: number;
@@ -104,9 +105,9 @@ function ReserList({ url, isEdit = false }: ReserListProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {reserList.map((data) => (
+        {reserList.map((data, index) => (
           <TableRow key={data.id}>
-            <TableCell className="font-medium text-center">{data.id}</TableCell>
+            <TableCell className="font-medium text-center">{index+1}</TableCell>
             <TableCell className="text-center">{data.roomName}</TableCell>
             <TableCell className="text-center">{data.username}</TableCell>
             <TableCell className="text-center">
@@ -129,7 +130,9 @@ function ReserList({ url, isEdit = false }: ReserListProps) {
                     <Button variant="outline">수정</Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px]">
-                    <Timer isEdit = {true}></Timer>
+                    <OpenArrayContext.Provider value={{id : data.id, openArray : open, setOpenArray: setOpen}}>
+                      <Timer reserId={data.id}></Timer>
+                    </OpenArrayContext.Provider>
                   </DialogContent>
                 </Dialog>
               </TableCell>

@@ -8,14 +8,14 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 
-import Timer from "./timer";
+import Timer from "./createTimer";
 
 function ReserPage() {
 
   return (
     <DrawerContent className="w-[50%] m-auto">
       
-        <DrawerHeader>
+        <DrawerHeader className="p-5 pb-0">
           <DrawerTitle>회의실 예약</DrawerTitle>
           <DrawerDescription>
             원하는 회의실과 사용 시간, 사용 기간을 선택해주세요
@@ -25,9 +25,9 @@ function ReserPage() {
           
         </DrawerHeader>
 
-        <DrawerFooter>
+        <DrawerFooter className="p-5 pt-1">
           <DrawerClose asChild>
-            <Button variant="outline" className="ml-2">
+            <Button variant="outline">
               닫기
             </Button>
           </DrawerClose>

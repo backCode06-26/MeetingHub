@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -43,7 +44,7 @@ public class ReserService {
         // 예약 저장
         Reser newReser = reserRequestDTO.toEntity(user, room);
         Reser saved = reserRepository.save(newReser);
-        if (saved.getId() != null) {
+        if (saved.getId() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         return ResponseEntity.status(HttpStatus.OK).body(saved);
@@ -75,8 +76,7 @@ public class ReserService {
 
     // 진행중인 예약 가져오기
     public ResponseEntity<List<ReserResponseDTO>> readReserNowAfter() {
-        Timestamp now = Timestamp.valueOf(LocalDateTime.now());
-        List<ReserResponseDTO> userRoomReserAfterList = reserRepository.findByReserDateAfterOrderByReserDateDesc(now).stream().map(Reser::toDTO).toList();
+        List<ReserResponseDTO> userRoomReserAfterList = reserRepository.findByReserDateAfterOrderByReserDateDesc(LocalDate.now()).stream().map(Reser::toDTO).toList();
         if (userRoomReserAfterList.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -86,7 +86,7 @@ public class ReserService {
     // 완료된 예약 가져오기
     public ResponseEntity<List<ReserResponseDTO>> readReserNowBefore() {
         Timestamp now = Timestamp.valueOf(LocalDateTime.now());
-        List<ReserResponseDTO> userRoomReserBeforeList = reserRepository.findByReserDateBeforeOrderByReserDateDesc(now).stream().map(Reser::toDTO).toList();
+        List<ReserResponseDTO> userRoomReserBeforeList = reserRepository.findByReserDateBeforeOrderByReserDateDesc(LocalDate.now()).stream().map(Reser::toDTO).toList();
         if (userRoomReserBeforeList.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -94,8 +94,8 @@ public class ReserService {
     }
 
     // 예약된 시간 조회
-    public ResponseEntity<List<Double>> readTimeByReserDate(String selectDate) {
-        List<Double> tiems = reserRepository.findTimeByReserDate(selectDate);
+    public ResponseEntity<List<Double>> readTimeByReserDate(Long targetId, LocalDate reserDate) {
+        List<Double> tiems = reserRepository.findAvailableTimes(targetId, reserDate);
         if (tiems.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -105,7 +105,8 @@ public class ReserService {
     // 수정
     public ResponseEntity<Reser> updateReser(ReserRequestDTO reserRequestDTO) {
         if (reserRepository.findById(reserRequestDTO.getId()) != null) {
-            Reser reser = reserRepository.findById(reserRequestDTO.getId());
+            Reser reser = new Reser();
+            reser.setUser(userRepository.findByEmail(reserRequestDTO.getEmail()));
             reser.setRoom(roomRepository.findById(reserRequestDTO.getRoomId()));
             reser.setReserDate(reserRequestDTO.getReserDate());
             reser.setStartDate(reserRequestDTO.getStartDate());

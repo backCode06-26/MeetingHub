@@ -24,8 +24,8 @@ CREATE TABLE RESERS
     ID         INT PRIMARY KEY AUTO_INCREMENT,
     USER_ID    VARCHAR(255) NOT NULL,
     ROOM_ID    BIGINT       NOT NULL,
-    RESER_DATE DATE         NOT NULL,      -- 날짜만 필요하므로 DATE로 변경
-    START_DATE FLOAT        NOT NULL,      -- 시간으로 의미 명확히 하기 위해 컬럼명 변경 및 FLOAT 타입
+    RESER_DATE DATE        NOT NULL,
+    START_DATE FLOAT        NOT NULL,
     END_DATE   FLOAT        NOT NULL,
     FOREIGN KEY (USER_ID) REFERENCES USERS (EMAIL),
     FOREIGN KEY (ROOM_ID) REFERENCES ROOMS (ID)
@@ -43,11 +43,11 @@ VALUES ('user@example.com', 'user', '$2a$12$mNETO7neFVdLaVrECmTJBua7fzMmvDG3V1Ln
 
 -- 회의실 정보 추가 (ID 자동증가 옵션 고려 시 ID 생략 가능)
 INSERT INTO ROOMS (ID, ROOM_NAME)
-VALUES (1,'회의실 A'),
-       (2,'회의실 B'),
-       (3,'회의실 C'),
-       (4,'회의실 D'),
-       (5,'회의실 E');
+VALUES (1, '회의실 A'),
+       (2, '회의실 B'),
+       (3, '회의실 C'),
+       (4, '회의실 D'),
+       (5, '회의실 E');
 
 -- 예약 정보 추가 (ROOM_ID는 1~5만 사용)
 INSERT INTO RESERS (USER_ID, ROOM_ID, RESER_DATE, START_DATE, END_DATE)

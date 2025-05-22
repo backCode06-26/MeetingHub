@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -16,23 +16,29 @@ public interface ReserRepository extends JpaRepository<Reser, Integer> {
 
     // 특정 회의실의 예약된 시간 범위를 모두 출력하는 메서드
     List<Reser> findByRoomId(Long id);
+
     // 특정 사용자의 예약을 가져옵니다.
     List<Reser> findByUserEmailOrderByReserDateDesc(String email);
 
     // 완료된 예약
-    List<Reser> findByReserDateBeforeOrderByReserDateDesc(Timestamp nowDate);
+    List<Reser> findByReserDateBeforeOrderByReserDateDesc(LocalDate reserDate);
+
     // 진행 중인 예약
-    List<Reser> findByReserDateAfterOrderByReserDateDesc(Timestamp nowDate);
+    List<Reser> findByReserDateAfterOrderByReserDateDesc(LocalDate nowDate);
 
     void deleteByRoomId(Long roomId);
 
-    @Query(value = "SELECT T.TIME " +
-            "FROM TIMESLOTS T " +
-            "WHERE T.TIME NOT IN ( " +
-            "    SELECT TS.TIME " +
-            "    FROM RESERS R " +
-            "    JOIN TIMESLOTS TS ON TS.TIME >= R.START_DATE AND TS.TIME < R.END_DATE " +
-            "    WHERE R.RESER_DATE = STR_TO_DATE(:selectDate, '%Y-%m-%d') " +
-            ")", nativeQuery = true)
-    List<Double> findTimeByReserDate(@Param("selectDate") String selectDate);
+    @Query("""
+                SELECT t.time
+                FROM Timeslot t
+                WHERE t.time NOT IN (
+                    SELECT ts.time
+                    FROM Timeslot ts JOIN Reser r
+                    ON ts.time >= r.startDate AND ts.time < r.endDate
+                    WHERE r.room.id = :targetId AND r.reserDate = :targetDate
+                )
+            """)
+    List<Double> findAvailableTimes(@Param("targetId") Long targetId, @Param("targetDate") LocalDate targetDate);
+
+
 }

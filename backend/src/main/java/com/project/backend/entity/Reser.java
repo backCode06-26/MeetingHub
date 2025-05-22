@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Table(name="resers")
@@ -29,7 +30,7 @@ public class Reser {
     private Room room;
 
     @Column(name = "reser_date", nullable = false)
-    private Timestamp reserDate;
+    private LocalDate reserDate;
 
     @Column(name = "start_date", nullable = false)
     private double startDate;
@@ -38,7 +39,7 @@ public class Reser {
     private double endDate;
 
     @Builder
-    public Reser(Long id, User user, Room room, Timestamp reserDate, double startDate, double endDate){
+    public Reser(Long id, User user, Room room, LocalDate reserDate, double startDate, double endDate){
         this.id = id;
         this.user = user;
         this.room = room;

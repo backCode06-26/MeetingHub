@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 
 @Getter
 @ToString
@@ -18,7 +19,7 @@ public class ReserRequestDTO {
     private Long id;
     private String email;
     private Long roomId;
-    private Timestamp reserDate;
+    private LocalDate reserDate;
     private double startDate;
     private double endDate;
 
