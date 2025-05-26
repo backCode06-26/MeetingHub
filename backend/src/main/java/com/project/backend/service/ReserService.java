@@ -76,7 +76,7 @@ public class ReserService {
 
     // 진행중인 예약 가져오기
     public ResponseEntity<List<ReserResponseDTO>> readReserNowAfter() {
-        List<ReserResponseDTO> userRoomReserAfterList = reserRepository.findByReserDateAfterOrderByReserDateDesc(LocalDate.now()).stream().map(Reser::toDTO).toList();
+        List<ReserResponseDTO> userRoomReserAfterList = reserRepository.findByReserDateGreaterThanEqualOrderByReserDateDesc(LocalDate.now()).stream().map(Reser::toDTO).toList();
         if (userRoomReserAfterList.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -106,6 +106,7 @@ public class ReserService {
     public ResponseEntity<Reser> updateReser(ReserRequestDTO reserRequestDTO) {
         if (reserRepository.findById(reserRequestDTO.getId()) != null) {
             Reser reser = new Reser();
+            reser.setId(reserRequestDTO.getId());
             reser.setUser(userRepository.findByEmail(reserRequestDTO.getEmail()));
             reser.setRoom(roomRepository.findById(reserRequestDTO.getRoomId()));
             reser.setReserDate(reserRequestDTO.getReserDate());

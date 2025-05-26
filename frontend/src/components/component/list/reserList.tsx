@@ -59,6 +59,10 @@ type ReserListProps = {
 function ReserList({ url, isEdit = false }: ReserListProps) {
   const navigate = useNavigate();
 
+  const date = new Date();
+  date.setDate(date.getDate() - 1);
+  const [nowDay] = useState<Date>(new Date(date));
+
   const [reserList, setReserList] = useState<Reser[]>([]);
   const [open, setOpen] = useState<boolean[]>([]);
 
@@ -106,8 +110,8 @@ function ReserList({ url, isEdit = false }: ReserListProps) {
       </TableHeader>
       <TableBody>
         {reserList.map((data, index) => (
-          <TableRow key={data.id}>
-            <TableCell className="font-medium text-center">{index+1}</TableCell>
+          <TableRow key={data.id} className={`${data.reserDate < date ? "text-gray-400" : "text-black"}`}>
+            <TableCell className="font-medium text-center">{index + 1}</TableCell>
             <TableCell className="text-center">{data.roomName}</TableCell>
             <TableCell className="text-center">{data.username}</TableCell>
             <TableCell className="text-center">
@@ -127,10 +131,12 @@ function ReserList({ url, isEdit = false }: ReserListProps) {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button variant="outline">수정</Button>
+
+                    <Button variant="outline" disabled={data.reserDate < date}>수정</Button>
+
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px]">
-                    <OpenArrayContext.Provider value={{id : data.id, openArray : open, setOpenArray: setOpen}}>
+                    <OpenArrayContext.Provider value={{ id: data.id, openArray: open, setOpenArray: setOpen }}>
                       <Timer reserId={data.id}></Timer>
                     </OpenArrayContext.Provider>
                   </DialogContent>

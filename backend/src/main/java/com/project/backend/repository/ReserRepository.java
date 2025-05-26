@@ -24,7 +24,7 @@ public interface ReserRepository extends JpaRepository<Reser, Integer> {
     List<Reser> findByReserDateBeforeOrderByReserDateDesc(LocalDate reserDate);
 
     // 진행 중인 예약
-    List<Reser> findByReserDateAfterOrderByReserDateDesc(LocalDate nowDate);
+    List<Reser> findByReserDateGreaterThanEqualOrderByReserDateDesc(LocalDate nowDate);
 
     void deleteByRoomId(Long roomId);
 
