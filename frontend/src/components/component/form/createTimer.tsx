@@ -34,7 +34,7 @@ function Timer() {
   const [roomActive, setRoomActive] = useState<boolean>(false);
   const [dateActive, setDateActive] = useState<"date" | "time">("date");
   const [timeActive, setTimeActive] = useState<"AM" | "PM">("AM");
-  const { setOpen } = useOpen();  
+  const { setOpen, setIsCreate } = useOpen();  
 
   const [selectedTimes, setSelectedTimes] = useState<number[]>([]);
   const [rooms, setRoomList] = useState<Room[]>([]);
@@ -206,9 +206,10 @@ function Timer() {
     method(url, reser)
       .then(() => {
         alert("작업이 완료되었습니다.");
+
         reset();
         
-        
+        setIsCreate(true);
         setOpen(false);
         setSelectedTimes([]);
         setRoomName(undefined);

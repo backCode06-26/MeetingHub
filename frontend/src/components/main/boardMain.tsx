@@ -10,6 +10,7 @@ import { OpenContext } from "../component/hook/openContext";
 
 function BoardMain() {
   const [open, setOpen] = useState<boolean>(false);
+  const [isCreate, setIsCreate] = useState<boolean>(false);
 
   const tabItems = [
     {
@@ -26,17 +27,17 @@ function BoardMain() {
 
   return (
     <>
-      <MyPage />
-      <ListTab tabs={tabItems}></ListTab>
+      <OpenContext.Provider value={{ open, setOpen, isCreate, setIsCreate }}>
+        <MyPage />
+        <ListTab tabs={tabItems}></ListTab>
 
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerTrigger className="m-5 p-2 text-base border-gray-300 rounded-md border hover:border-sky-500 hover:bg-gray-200 transition-colors duration-500">
-          회의실 예약
-        </DrawerTrigger>
-        <OpenContext.Provider value={{ open, setOpen }}>
+        <Drawer open={open} onOpenChange={setOpen}>
+          <DrawerTrigger className="m-5 p-2 text-base border-gray-300 rounded-md border hover:border-sky-500 hover:bg-gray-200 transition-colors duration-500">
+            회의실 예약
+          </DrawerTrigger>
           <ReserPage />
-        </OpenContext.Provider>
-      </Drawer>
+        </Drawer>
+      </OpenContext.Provider>
     </>
   );
 }

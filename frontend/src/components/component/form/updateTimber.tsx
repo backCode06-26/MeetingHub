@@ -27,7 +27,7 @@ type FormValues = {
 
 type TimerProps = {
   reserId: number;
-}
+};
 
 function Timer({ reserId }: TimerProps) {
   const navigate = useNavigate();
@@ -38,7 +38,8 @@ function Timer({ reserId }: TimerProps) {
   const [roomActive, setRoomActive] = useState<boolean>(false);
   const [dateActive, setDateActive] = useState<"date" | "time">("date");
   const [timeActive, setTimeActive] = useState<"AM" | "PM">("AM");
-  const { id, openArray, setOpenArray } = useOpenArray();
+  const { id, openArray, setOpenArray, reserList, setReserList } =
+    useOpenArray();
 
   const [selectedTimes, setSelectedTimes] = useState<number[]>([]);
   const [rooms, setRoomList] = useState<Room[]>([]);
@@ -211,8 +212,28 @@ function Timer({ reserId }: TimerProps) {
     const method = axios.patch;
 
     method(url, reser)
-      .then(() => {
+      .then((res) => {
         alert("작업이 완료되었습니다.");
+
+        const roomName = res.data.room.roomName;
+        const reserDate = res.data.reserDate;
+        const startDate = res.data.startDate;
+        const endDate = res.data.endDate;
+
+        const targetId = res.data.id;
+        const updateReser = reserList.map((reser) => {
+          return reser.id === targetId
+            ? {
+                ...reser,
+                roomName: roomName,
+                reserDate: reserDate,
+                startDate: startDate,
+                endDate: endDate,
+              }
+            : reser;
+        });
+        setReserList(updateReser);
+
         reset();
 
         const newOpen = [...openArray];

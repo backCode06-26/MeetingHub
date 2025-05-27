@@ -19,6 +19,7 @@ import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import Timer from "../form/updateTimber";
 import { OpenArrayContext } from "../hook/openArrayContext";
+import { useOpen } from "../hook/openContext";
 
 type Reser = {
   id: number;
@@ -61,10 +62,10 @@ function ReserList({ url, isEdit = false }: ReserListProps) {
 
   const date = new Date();
   date.setDate(date.getDate() - 1);
-  const [nowDay] = useState<Date>(new Date(date));
 
   const [reserList, setReserList] = useState<Reser[]>([]);
-  const [open, setOpen] = useState<boolean[]>([]);
+  const [openArray, setOpenArray] = useState<boolean[]>([]);
+  const { isCreate, setIsCreate } = useOpen();  
 
   useEffect(() => {
     axios
@@ -89,12 +90,13 @@ function ReserList({ url, isEdit = false }: ReserListProps) {
           endDate: data.endDate,
         }));
         console.log(reserData);
+        setIsCreate(false);
         setReserList(reserData);
       })
       .catch((error) => {
         console.error("Error fetching reservation data", error);
       });
-  }, [url, navigate]);
+  }, [url, navigate, isCreate]);
 
   return (
     <Table>
@@ -110,8 +112,15 @@ function ReserList({ url, isEdit = false }: ReserListProps) {
       </TableHeader>
       <TableBody>
         {reserList.map((data, index) => (
-          <TableRow key={data.id} className={`${data.reserDate < date ? "text-gray-400" : "text-black"}`}>
-            <TableCell className="font-medium text-center">{index + 1}</TableCell>
+          <TableRow
+            key={data.id}
+            className={`${
+              data.reserDate < date ? "text-gray-400" : "text-black"
+            }`}
+          >
+            <TableCell className="font-medium text-center">
+              {index + 1}
+            </TableCell>
             <TableCell className="text-center">{data.roomName}</TableCell>
             <TableCell className="text-center">{data.username}</TableCell>
             <TableCell className="text-center">
@@ -123,20 +132,28 @@ function ReserList({ url, isEdit = false }: ReserListProps) {
             {isEdit && (
               <TableCell className="text-center">
                 <Dialog
-                  open={open[data.id] || false}
+                  open={openArray[data.id] || false}
                   onOpenChange={(isOpen) => {
-                    const newOpen = [...open];
+                    const newOpen = [...openArray];
                     newOpen[data.id] = isOpen;
-                    setOpen(newOpen);
+                    setOpenArray(newOpen);
                   }}
                 >
                   <DialogTrigger asChild>
-
-                    <Button variant="outline" disabled={data.reserDate < date}>수정</Button>
-
+                    <Button variant="outline" disabled={data.reserDate < date}>
+                      수정
+                    </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px]">
-                    <OpenArrayContext.Provider value={{ id: data.id, openArray: open, setOpenArray: setOpen }}>
+                    <OpenArrayContext.Provider
+                      value={{
+                        id: data.id,
+                        openArray: openArray,
+                        setOpenArray: setOpenArray,
+                        reserList: reserList,
+                        setReserList: setReserList,
+                      }}
+                    >
                       <Timer reserId={data.id}></Timer>
                     </OpenArrayContext.Provider>
                   </DialogContent>

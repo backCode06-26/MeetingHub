@@ -4,6 +4,8 @@ import { createContext, useContext } from 'react';
 export const OpenContext = createContext<{
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isCreate: boolean;
+  setIsCreate: React.Dispatch<React.SetStateAction<boolean>>
 } | null>(null);
 
 export const useOpen = () => {
