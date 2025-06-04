@@ -1,14 +1,21 @@
-# Java 17 JDK 기반 이미지
-FROM eclipse-temurin:17-jdk-alpine
+FROM node:20-alpine AS frontend-builder
 
-# 작업 디렉토리 설정
+WORKDIR /app/frontend
+
+COPY frontend/package*.json ./
+RUN npm install
+
+COPY frontend/ .
+RUN npm run build
+
+
+FROM openjdk:17-jdk-slim
+
 WORKDIR /app
 
-# JAR 파일 복사
-COPY target/backend-0.0.1-SNAPSHOT.jar app.jar
+COPY backend/target/your-backend-app.jar app.jar
 
-# 포트 열기 (Spring Boot 기본)
+COPY --from=frontend-builder /app/frontend/dist BOOT-INF/classes/static/
+
 EXPOSE 8080
-
-# 앱 실행 명령어
-CMD ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
