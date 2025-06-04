@@ -37,6 +37,11 @@ public class ReserController {
         return reserService.readReserAll();
     }
 
+    @GetMapping("/api/reser/select/{id}")
+    public ResponseEntity<ReserResponseDTO> readReserById(@PathVariable Long id) {
+        return reserService.readReserById(id);
+    }
+
     // 현재 사용자 예약 가져오기
     @GetMapping("/api/reser/user")
     public ResponseEntity<List<ReserResponseDTO>> readReserUser(@AuthenticationPrincipal CustomUserDetails userDetails) {

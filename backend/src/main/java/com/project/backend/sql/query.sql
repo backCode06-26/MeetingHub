@@ -24,7 +24,7 @@ CREATE TABLE RESERS
     ID         INT PRIMARY KEY AUTO_INCREMENT,
     USER_ID    VARCHAR(255) NOT NULL,
     ROOM_ID    BIGINT       NOT NULL,
-    RESER_DATE DATE        NOT NULL,
+    RESER_DATE DATE         NOT NULL,
     START_DATE FLOAT        NOT NULL,
     END_DATE   FLOAT        NOT NULL,
     FOREIGN KEY (USER_ID) REFERENCES USERS (EMAIL),
@@ -51,18 +51,26 @@ VALUES (1, '회의실 A'),
 
 -- 예약 정보 추가 (ROOM_ID는 1~5만 사용)
 INSERT INTO RESERS (USER_ID, ROOM_ID, RESER_DATE, START_DATE, END_DATE)
-VALUES ('user@example.com', 1, '2025-04-16', 10.0, 11.0),
-       ('user@example.com', 2, '2025-04-16', 12.5, 13.5),
-       ('admin@example.com', 3, '2025-04-16', 16.0, 17.0),
-       ('user@example.com', 4, '2025-04-18', 10.5, 11.5),
-       ('admin@example.com', 5, '2025-04-19', 15.0, 16.5),
-       ('user@example.com', 1, '2025-05-20', 14.0, 15.0),
-       ('user@example.com', 2, '2025-05-20', 9.0, 10.5),
-       ('user@example.com', 3, '2025-05-20', 11.0, 12.0),
-       ('user@example.com', 4, '2025-05-20', 16.0, 17.0),
-       ('user@example.com', 2, '2025-05-21', 9.5, 11.0),
-       ('admin@example.com', 3, '2025-05-22', 13.0, 14.5),
-       ('user@example.com', 4, '2025-05-23', 16.0, 17.0);
+VALUES
+-- 과거 예약 5건
+('user@example.com', 1, '2025-05-29', 10.0, 11.0),
+('user@example.com', 2, '2025-05-31', 12.5, 13.5),
+('admin@example.com', 3, '2025-06-01', 16.0, 17.0),
+('user@example.com', 4, '2025-06-02', 10.5, 11.5),
+('admin@example.com', 5, '2025-06-03', 15.0, 16.5),
+
+-- 현재 예약 2건 (오늘 날짜: 2025-06-04)
+('user@example.com', 1, '2025-06-04', 14.0, 15.0),
+('user@example.com', 1, '2025-06-04', 8.0, 10.0),
+
+-- 미래 예약 6건
+('user@example.com', 2, '2025-06-05', 9.0, 10.5),
+('user@example.com', 3, '2025-06-06', 11.0, 12.0),
+('user@example.com', 4, '2025-06-07', 16.0, 17.0),
+('user@example.com', 2, '2025-06-08', 9.5, 11.0),
+('admin@example.com', 3, '2025-06-09', 13.0, 14.5),
+('user@example.com', 4, '2025-06-10', 16.0, 17.0);
+
 
 -- TIMESLOTS 데이터 추가
 INSERT INTO TIMESLOTS (TIME)

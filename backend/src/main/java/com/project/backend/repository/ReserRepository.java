@@ -18,13 +18,32 @@ public interface ReserRepository extends JpaRepository<Reser, Integer> {
     List<Reser> findByRoomId(Long id);
 
     // 특정 사용자의 예약을 가져옵니다.
-    List<Reser> findByUserEmailOrderByReserDateDesc(String email);
+    List<Reser> findByUserEmailOrderByReserDateDescStartDateDesc(String email);
 
     // 완료된 예약
-    List<Reser> findByReserDateBeforeOrderByReserDateDesc(LocalDate reserDate);
+    @Query("""
+                SELECT r FROM Reser r
+                WHERE r.reserDate < :today
+                   OR (r.reserDate = :today AND r.endDate <= :currentTime)
+                ORDER BY r.reserDate DESC, r.startDate DESC 
+            """)
+    List<Reser> findByReserDateBeforeOrderByReserDateDescStartDateDesc(
+            @Param("today") LocalDate reserDate,
+            @Param("currentTime") double currentTime
+    );
 
     // 진행 중인 예약
-    List<Reser> findByReserDateGreaterThanEqualOrderByReserDateDesc(LocalDate nowDate);
+    @Query("""
+                SELECT r FROM Reser r
+                WHERE (r.reserDate > :today)
+                   OR (r.reserDate = :today AND r.endDate > :currentTime)
+                ORDER BY r.reserDate DESC, r.startDate DESC 
+            """)
+    List<Reser> findByReserDateGreaterThanEqualOrderByReserDateDescStartDateDesc(
+            @Param("today") LocalDate reserDate,
+            @Param("currentTime") double currentTime
+    );
+
 
     void deleteByRoomId(Long roomId);
 
@@ -37,8 +56,18 @@ public interface ReserRepository extends JpaRepository<Reser, Integer> {
                     ON ts.time >= r.startDate AND ts.time < r.endDate
                     WHERE r.room.id = :targetId AND r.reserDate = :targetDate
                 )
+                AND t.time > :currentTime
             """)
-    List<Double> findAvailableTimes(@Param("targetId") Long targetId, @Param("targetDate") LocalDate targetDate);
+    List<Double> findAvailableTimes(
+            @Param("targetId") Long targetId,
+            @Param("targetDate") LocalDate targetDate,
+            @Param("currentTime") Double currentTime
+    );
+
+    @Query("""
+                SELECT t.time FROM Timeslot t
+            """)
+    List<Double> findTimes();
 
 
 }

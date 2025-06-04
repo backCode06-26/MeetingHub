@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { useOpenArray } from "../hook/openArrayContext";
 
 type Room = {
   id: number;
@@ -25,11 +24,37 @@ type FormValues = {
   endDate: number;
 };
 
-type TimerProps = {
+type Reser = {
+  id: number;
+  username: string;
+  roomName: string;
+  reserDate: Date;
+  startDate: number;
+  endDate: number;
+};
+
+type editProps = {
+  isEdit: boolean;
   reserId: number;
 };
 
-function Timer({ reserId }: TimerProps) {
+type timerToggle = {
+  reserList: Reser[];
+  setReserList: React.Dispatch<React.SetStateAction<Reser[]>>;
+  setOpen: () => void;
+  tabs: any[];
+  setKey: React.Dispatch<React.SetStateAction<string>>;
+  edit?: editProps;
+};
+
+function Timer({
+  reserList,
+  setReserList,
+  setOpen,
+  tabs,
+  edit = { isEdit: false, reserId: 0 },
+  setKey,
+}: timerToggle) {
   const navigate = useNavigate();
 
   const yesterDay = new Date();
@@ -38,15 +63,10 @@ function Timer({ reserId }: TimerProps) {
   const [roomActive, setRoomActive] = useState<boolean>(false);
   const [dateActive, setDateActive] = useState<"date" | "time">("date");
   const [timeActive, setTimeActive] = useState<"AM" | "PM">("AM");
-  const { id, openArray, setOpenArray, reserList, setReserList } =
-    useOpenArray();
 
   const [selectedTimes, setSelectedTimes] = useState<number[]>([]);
   const [rooms, setRoomList] = useState<Room[]>([]);
   const [times, setTimeList] = useState<Time[] | undefined>(undefined);
-
-  const [date, setDate] = useState<Date>(new Date());
-  const [room, setRoomName] = useState<Room>();
 
   const { handleSubmit, setValue, getValues, reset, register } =
     useForm<FormValues>({
@@ -58,6 +78,34 @@ function Timer({ reserId }: TimerProps) {
         endDate: 0,
       },
     });
+
+  useEffect(() => {
+    if (edit.isEdit) {
+      axios.get(`/api/reser/select/${edit.reserId}`).then((res) => {
+        const startDate = res.data.startDate;
+        const endDate = res.data.endDate;
+
+        const payload = {
+          roomId: res.data.roomId,
+          reserDate: new Date(res.data.reserDate),
+          startDate: startDate,
+          endDate: endDate,
+        };
+        reset(payload);
+
+        const times = []
+        for(let time=startDate; time<=endDate; time+=0.5) {
+          times.push(time);
+        }
+        setSelectedTimes(times);
+      });
+    }
+  }, [edit]);
+
+  const findRoomName = () => {
+    const roomId = getValues("roomId");
+    return rooms.find((room) => room.id === roomId)?.roomName;
+  };
 
   useEffect(() => {
     // 회의실 목록 조회
@@ -77,6 +125,8 @@ function Timer({ reserId }: TimerProps) {
         console.error("로그인 정보 불러오기 실패:", err);
         navigate("/");
       });
+
+    updateSelectTimes(getValues("roomId"));
   }, [navigate, setValue, getValues]);
 
   // 시작 시간과 종료 시간 업데이트 함수
@@ -97,16 +147,15 @@ function Timer({ reserId }: TimerProps) {
 
   useEffect(() => {
     updateStartEndDate(selectedTimes);
-  }, [date, selectedTimes, setValue]);
+  }, [selectedTimes, setValue]);
 
   // 시간을 가져오는 함수
   const updateSelectTimes = (id: number) => {
-    const reserDate = format(date, "yyyy-MM-dd");
+    const reserDate = format(getValues("reserDate"), "yyyy-MM-dd");
     axios
       .get(`/api/reser/time?roomId=${id}&reserDate=${reserDate}`)
       .then((response) => {
-        console.log(response);
-        const times: Time[] = response.data.map((time: any) => ({
+        const times: Time[] = response.data.map((time: number) => ({
           time: time,
         }));
 
@@ -151,9 +200,7 @@ function Timer({ reserId }: TimerProps) {
 
   // 회의실 선택 함수
   const handleSelectRoom = (selectedRoom: Room) => {
-    setRoomName(selectedRoom);
     setValue("roomId", selectedRoom.id, { shouldValidate: true });
-    updateSelectTimes(selectedRoom.id);
     setRoomActive(false);
   };
 
@@ -175,21 +222,23 @@ function Timer({ reserId }: TimerProps) {
       alert("오늘 이전의 날짜를 선택할 수 없습니다!");
       return false;
     }
+    if (selectedTimes.length === 0) {
+      alert("시간을 선택해주세요");
+      return false;
+    }
+    if (selectedTimes.length === 1) {
+      alert("2개 이상의 시간을 선택해주세요");
+      return false;
+    }
     if (selectedTimes.length > 1) {
-      if (!data.startDate || data.startDate === 0) {
+      if (!data.startDate) {
         alert("시작 시간을 선택해주세요");
         return false;
       }
-      if (!data.endDate || data.endDate === 0) {
+      if (!data.endDate) {
         alert("종료 시간을 선택해주세요");
         return false;
       }
-    } else if (selectedTimes.length === 0) {
-      alert("시간을 선택해주세요");
-      return false;
-    } else {
-      alert("2개 이상의 시간을 선택해주세요");
-      return false;
     }
     return true;
   };
@@ -198,49 +247,41 @@ function Timer({ reserId }: TimerProps) {
   const createReser = (data: FormValues) => {
     if (!validateForm(data)) return;
 
-    const reser = {
-      id: reserId,
+    const payload = {
       email: data.email,
       roomId: data.roomId,
       reserDate: format(data.reserDate, "yyyy-MM-dd"),
       startDate: data.startDate,
       endDate: data.endDate,
     };
-    console.log(reser);
 
-    const url = "/api/reser/update";
-    const method = axios.patch;
+    const url = edit.isEdit ? "/api/reser/update" : "/api/reser/create";
+    const method = edit.isEdit ? axios.patch : axios.post;
 
-    method(url, reser)
+    method(url, payload)
       .then((res) => {
         alert("작업이 완료되었습니다.");
+        console.log(res.data);
 
-        const roomName = res.data.room.roomName;
-        const reserDate = res.data.reserDate;
-        const startDate = res.data.startDate;
-        const endDate = res.data.endDate;
+        setKey(tabs[0].key);
 
-        const targetId = res.data.id;
-        const updateReser = reserList.map((reser) => {
-          return reser.id === targetId
-            ? {
-                ...reser,
-                roomName: roomName,
-                reserDate: reserDate,
-                startDate: startDate,
-                endDate: endDate,
-              }
-            : reser;
+        const newList = [res.data, ...reserList];
+        newList.sort((a, b) => {
+          const dateA = new Date(a.reserDate).getTime();
+          const dateB = new Date(b.reserDate).getTime();
+
+          if (a.reserDate !== b.reserDate) {
+            return dateB - dateA;
+          } else {
+            return b.startDate - a.startDate;
+          }
         });
-        setReserList(updateReser);
 
+        setReserList(newList);
+        setOpen();
         reset();
 
-        const newOpen = [...openArray];
-        newOpen[id] = false;
-        setOpenArray(newOpen);
         setSelectedTimes([]);
-        setRoomName(undefined);
       })
       .catch((err) => {
         console.error(err);
@@ -254,15 +295,16 @@ function Timer({ reserId }: TimerProps) {
       <div
         {...register("roomId")}
         className="relative w-full text-center my-5 z-10"
-        onMouseEnter={() => setRoomActive(true)}
-        onMouseLeave={() => setRoomActive(false)}
+        onClick={() => setRoomActive(!roomActive)}
       >
         <button
           type="button"
           className="w-full h-[40px] border border-sky-200 rounded-sm"
           onClick={() => setRoomActive((prev) => !prev)}
         >
-          {room === undefined ? "회의실을 선택해주세요!" : room.roomName}
+          {findRoomName() === undefined
+            ? "회의실을 선택해주세요!"
+            : findRoomName()}
         </button>
         <div
           className={`w-full absolute top-[40px] left-0 border border-1 border-sky-200 rounded-[15px] transition-all duration-200 bg-white
@@ -317,10 +359,9 @@ function Timer({ reserId }: TimerProps) {
         <Calendar
           {...register("reserDate")}
           mode="single"
-          selected={date}
+          selected={getValues("reserDate")}
           onSelect={(selectedDate: Date | undefined) => {
             if (selectedDate) {
-              setDate(selectedDate);
               setValue("reserDate", selectedDate);
 
               // 날짜 변경 시 시간 초기화
@@ -408,7 +449,7 @@ function Timer({ reserId }: TimerProps) {
       )}
 
       <Button type="submit" className="w-full">
-        예약 수정
+        {edit.isEdit ? "예약 수정" : "예약 수정"}
       </Button>
     </form>
   );

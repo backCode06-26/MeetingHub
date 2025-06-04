@@ -1,10 +1,10 @@
-import LoginPage from "../component/form/nav/loginPage";
+import NavPage from "../component/form/nav/navPage";
 
 function GuestMain() {
 
   return (
     <>
-      <LoginPage></LoginPage>
+      <NavPage></NavPage>
       
       <div className="text-center">
         <h3 className="text-[20px] mt-[10px]">환영합니다!</h3>

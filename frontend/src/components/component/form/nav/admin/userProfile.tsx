@@ -13,7 +13,7 @@ interface UserProfileProps {
 
 function UserProfile({ user, onLogout }: UserProfileProps) {
   return (
-    <Card className="w-[300px] mx-auto">
+    <Card className="w-[300px]">
       <CardHeader>
         <CardTitle>내 정보</CardTitle>
       </CardHeader>

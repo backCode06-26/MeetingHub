@@ -53,6 +53,7 @@ public class Reser {
                 .id(this.id)
                 .username(this.user.getUsername())
                 .roomName(this.room.getRoomName())
+                .roomId(this.room.getId())
                 .reserDate(this.reserDate)
                 .startDate(this.startDate)
                 .endDate(this.endDate)

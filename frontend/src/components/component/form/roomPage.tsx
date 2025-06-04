@@ -57,7 +57,7 @@ function RoomList() {
           alert("회의실 삭제가 완료되었습니다!");
           console.log(response);
 
-          // 삭제 후 값이 바로 변경되게 처리
+          // 삭제 후 값이 바로 동기화
           setRoomList((prevList) => prevList.filter((room) => room.id !== id));
         })
         .catch((error) => {
@@ -69,7 +69,8 @@ function RoomList() {
 
   // 회의실의 정보 수정
   const handleChange = (id: number, newName: string) => {
-    // 수정된 값이 바로 보이게 수정
+
+    // 회의실 정보를 수정하면 바로 동기화하는 코드드
     setRoomList((prevList: Room[]) =>
       prevList.map((room: Room) =>
         room.id === id ? { ...room, roomName: newName } : room

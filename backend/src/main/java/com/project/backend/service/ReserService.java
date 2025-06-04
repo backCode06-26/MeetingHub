@@ -33,6 +33,16 @@ public class ReserService {
         this.userRepository = userRepository;
     }
 
+    // 현재 시간 생성
+    private double currentTime() {
+        LocalDateTime now = LocalDateTime.now();
+        double hour = now.getHour();
+        double minute = now.getMinute() >= 30 ? 0.5 : 0;
+
+        double currentTime = hour + minute;
+        return currentTime;
+    }
+
 
     // 생성
     public ResponseEntity<?> createReser(ReserRequestDTO reserRequestDTO) {
@@ -47,14 +57,26 @@ public class ReserService {
         if (saved.getId() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        return ResponseEntity.status(HttpStatus.OK).body(saved);
+
+        ReserResponseDTO data = reserRepository.findById(saved.getId()).toDTO();
+        return ResponseEntity.status(HttpStatus.OK).body(data);
+    }
+
+
+    // id로 예약 가져오기
+    public ResponseEntity<ReserResponseDTO> readReserById(Long id) {
+        Reser reser = reserRepository.findById(id);
+        if (reser == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(reser.toDTO());
     }
 
 
     // 전체 예약 가져오기
     public ResponseEntity<List<ReserResponseDTO>> readReserAll() {
         List<ReserResponseDTO> userRoomReserList =
-                reserRepository.findAll(Sort.by(Sort.Direction.DESC, "ReserDate"))
+                reserRepository.findAll(Sort.by(Sort.Direction.DESC, "ReserDate", "StartDate"))
                         .stream()
                         .map(Reser::toDTO)
                         .toList();
@@ -67,7 +89,13 @@ public class ReserService {
 
     // 현재 사용자의 예약 가져오기
     public ResponseEntity<List<ReserResponseDTO>> readReserUser(String email) {
-        List<ReserResponseDTO> userRoomReserList = reserRepository.findByUserEmailOrderByReserDateDesc(email).stream().map(Reser::toDTO).toList();
+        List<ReserResponseDTO> userRoomReserList = reserRepository
+                .findByUserEmailOrderByReserDateDescStartDateDesc(
+                        email
+                )
+                .stream()
+                .map(Reser::toDTO)
+                .toList();
         if (userRoomReserList.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -76,7 +104,16 @@ public class ReserService {
 
     // 진행중인 예약 가져오기
     public ResponseEntity<List<ReserResponseDTO>> readReserNowAfter() {
-        List<ReserResponseDTO> userRoomReserAfterList = reserRepository.findByReserDateGreaterThanEqualOrderByReserDateDesc(LocalDate.now()).stream().map(Reser::toDTO).toList();
+        double currentTime = currentTime();
+
+        List<ReserResponseDTO> userRoomReserAfterList = reserRepository
+                .findByReserDateGreaterThanEqualOrderByReserDateDescStartDateDesc(
+                        LocalDate.now(),
+                        currentTime
+                )
+                .stream()
+                .map(Reser::toDTO)
+                .toList();
         if (userRoomReserAfterList.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -85,8 +122,16 @@ public class ReserService {
 
     // 완료된 예약 가져오기
     public ResponseEntity<List<ReserResponseDTO>> readReserNowBefore() {
-        Timestamp now = Timestamp.valueOf(LocalDateTime.now());
-        List<ReserResponseDTO> userRoomReserBeforeList = reserRepository.findByReserDateBeforeOrderByReserDateDesc(LocalDate.now()).stream().map(Reser::toDTO).toList();
+        double currentTime = currentTime();
+
+        List<ReserResponseDTO> userRoomReserBeforeList = reserRepository
+                .findByReserDateBeforeOrderByReserDateDescStartDateDesc(
+                        LocalDate.now(),
+                        currentTime
+                )
+                .stream()
+                .map(Reser::toDTO)
+                .toList();
         if (userRoomReserBeforeList.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -95,7 +140,13 @@ public class ReserService {
 
     // 예약된 시간 조회
     public ResponseEntity<List<Double>> readTimeByReserDate(Long targetId, LocalDate reserDate) {
-        List<Double> tiems = reserRepository.findAvailableTimes(targetId, reserDate);
+
+        double currentTime = currentTime();
+
+        List<Double> tiems = reserDate.equals(LocalDate.now()) ?
+                reserRepository.findAvailableTimes(targetId, reserDate, currentTime) :
+                reserRepository.findTimes();
+
         if (tiems.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }

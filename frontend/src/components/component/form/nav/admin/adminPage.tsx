@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import UserProfile from "@/components/component/form/nav/userProfile";
-import logo from "@/assets/pnjl44_j6pb-0_logo.jpg";
+import UserProfile from "@/components/component/form/nav/admin/userProfile";
 import { useState, useEffect } from "react";
 
 type User = {
@@ -10,7 +9,7 @@ type User = {
   role : string;
 }
 
-function MyPage() {
+function adminPage() {
   const navigate = useNavigate();
 
   const [user, setUser] = useState<User>();
@@ -43,13 +42,8 @@ function MyPage() {
   if (!user?.username) return <div>로그인 정보를 불러오는 중...</div>;
 
   return (
-    <div className="flex justify-between m-2 items-center">
-      <img src={logo} alt="로고" className="h-10" />
-      <div className="flex gap-2">
-        <UserProfile user={user} onLogout={handleLogout} />
-      </div>
-    </div>
+    <UserProfile user={user} onLogout={handleLogout} />
   );
 }
 
-export default MyPage;
+export default adminPage;

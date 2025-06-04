@@ -17,9 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
-import Timer from "../form/updateTimber";
-import { OpenArrayContext } from "../hook/openArrayContext";
-import { useOpen } from "../hook/openContext";
+import Timer from "../form/timer";
 
 type Reser = {
   id: number;
@@ -54,18 +52,26 @@ function formatTimeRange(startDate: number, endDate: number) {
 
 type ReserListProps = {
   url: string;
+  reserList: Reser[];
+  setReserList: React.Dispatch<React.SetStateAction<Reser[]>>;
+  key: string;
+  setKey: React.Dispatch<React.SetStateAction<string>>
+  tabs: any[];
   isEdit?: boolean;
 };
 
-function ReserList({ url, isEdit = false }: ReserListProps) {
+function ReserList({
+  url,
+  reserList,
+  setReserList,
+  key,
+  setKey,
+  tabs,
+  isEdit = false,
+}: ReserListProps) {
   const navigate = useNavigate();
 
-  const date = new Date();
-  date.setDate(date.getDate() - 1);
-
-  const [reserList, setReserList] = useState<Reser[]>([]);
-  const [openArray, setOpenArray] = useState<boolean[]>([]);
-  const { isCreate, setIsCreate } = useOpen();  
+  const [openList, setOpenList] = useState<{ [key: number]: boolean }>({});
 
   useEffect(() => {
     axios
@@ -77,9 +83,12 @@ function ReserList({ url, isEdit = false }: ReserListProps) {
       })
       .catch(() => navigate("/"));
 
+  }, [navigate]);
+
+  useEffect(() => {
     // 원하는 경로에 있는 정보 가져오기
     axios
-      .get("/api/reser/" + url)
+      .get(url)
       .then((response) => {
         const reserData: Reser[] = response.data.map((data: any) => ({
           id: data.id,
@@ -89,14 +98,28 @@ function ReserList({ url, isEdit = false }: ReserListProps) {
           startDate: data.startDate,
           endDate: data.endDate,
         }));
-        console.log(reserData);
-        setIsCreate(false);
         setReserList(reserData);
       })
       .catch((error) => {
         console.error("Error fetching reservation data", error);
       });
-  }, [url, navigate, isCreate]);
+  }, [key]);
+
+  const isDisabled = (data: any) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    today.setHours(0, 0, 0, 0);
+
+    const currentTime = new Date(data.reserDate);
+    currentTime.setHours(0, 0, 0, 0);
+
+    const currentMinutes = now.getHours() + (now.getMinutes() > 30 ? 0.5 : 0);
+    
+    return (
+      currentTime < today ||
+      (currentTime.getTime() === today.getTime() && data.endDate <= currentMinutes)
+    );
+  };
 
   return (
     <Table>
@@ -106,7 +129,7 @@ function ReserList({ url, isEdit = false }: ReserListProps) {
           <TableHead className="text-center">회의실</TableHead>
           <TableHead className="text-center">사용자</TableHead>
           <TableHead className="text-center">예약 시간</TableHead>
-          <TableHead className="text-right">사용시간</TableHead>
+          <TableHead className="text-center w-[200px]">사용시간</TableHead>
           {isEdit && <TableHead className="text-center">수정</TableHead>}
         </TableRow>
       </TableHeader>
@@ -114,48 +137,47 @@ function ReserList({ url, isEdit = false }: ReserListProps) {
         {reserList.map((data, index) => (
           <TableRow
             key={data.id}
-            className={`${
-              data.reserDate < date ? "text-gray-400" : "text-black"
-            }`}
+            className={`${isDisabled(data) ? "text-gray-400" : "text-black"}`}
           >
             <TableCell className="font-medium text-center">
               {index + 1}
             </TableCell>
             <TableCell className="text-center">{data.roomName}</TableCell>
             <TableCell className="text-center">{data.username}</TableCell>
+
+            {/* 날짜 */}
             <TableCell className="text-center">
               {formatSafe(data.reserDate)}
             </TableCell>
-            <TableCell className="text-right">
+
+            {/* 시간 */}
+            <TableCell className="text-center">
               {formatTimeRange(data.startDate, data.endDate)}
             </TableCell>
+
             {isEdit && (
               <TableCell className="text-center">
                 <Dialog
-                  open={openArray[data.id] || false}
-                  onOpenChange={(isOpen) => {
-                    const newOpen = [...openArray];
-                    newOpen[data.id] = isOpen;
-                    setOpenArray(newOpen);
-                  }}
+                  open={!!openList[data.id]}
+                  onOpenChange={(isOpen) =>
+                    setOpenList((prev) => ({ ...prev, [data.id]: isOpen }))
+                  }
                 >
                   <DialogTrigger asChild>
-                    <Button variant="outline" disabled={data.reserDate < date}>
+                    <Button variant="outline" disabled={isDisabled(data)}>
                       수정
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px]">
-                    <OpenArrayContext.Provider
-                      value={{
-                        id: data.id,
-                        openArray: openArray,
-                        setOpenArray: setOpenArray,
-                        reserList: reserList,
-                        setReserList: setReserList,
-                      }}
-                    >
-                      <Timer reserId={data.id}></Timer>
-                    </OpenArrayContext.Provider>
+                    <Timer
+                      reserList={reserList}
+                      setReserList={setReserList}
+                      setOpen={() => setOpenList((prev) => ({ ...prev, [data.id]: false }))}
+                      setKey={setKey}
+                      tabs={tabs}
+                      edit={{isEdit : true, reserId: data.id}}
+
+                    ></Timer>
                   </DialogContent>
                 </Dialog>
               </TableCell>
