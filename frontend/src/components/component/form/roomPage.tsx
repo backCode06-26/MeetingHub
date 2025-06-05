@@ -28,7 +28,20 @@ type Room = {
   roomName: string;
 };
 
-function RoomList() {
+type Reser = {
+  id: number;
+  username: string;
+  roomName: string;
+  reserDate: Date;
+  startDate: number;
+  endDate: number;
+};
+
+type RoomProps = {
+  setReserList : React.Dispatch<React.SetStateAction<Reser[]>>
+}
+
+function RoomList({setReserList} : RoomProps ) {
   // 기존의 회의실
   const [roomList, setRoomList] = useState<Room[]>([]);
 
@@ -49,16 +62,17 @@ function RoomList() {
   });
 
   // 회의실 삭제
-  const deleteRoom = (id: number) => {
+  const deleteRoom = (data: Room) => {
     if (confirm("정말로 삭제하시겠습니다?")) {
       axios
-        .delete(`/api/room/delete/${id}`)
+        .delete(`/api/room/delete/${data.id}`)
         .then((response) => {
           alert("회의실 삭제가 완료되었습니다!");
           console.log(response);
 
           // 삭제 후 값이 바로 동기화
-          setRoomList((prevList) => prevList.filter((room) => room.id !== id));
+          setRoomList((prevList) => prevList.filter((room) => room.id != data.id));
+          setReserList((prevList) => prevList.filter((reser) => reser.roomName != data.roomName))
         })
         .catch((error) => {
           alert("회의실 삭제를 실패하였습니다!");
@@ -187,7 +201,7 @@ function RoomList() {
                   <TableCell className="text-right">
                     <Button
                       variant="outline"
-                      onClick={() => deleteRoom(data.id)}
+                      onClick={() => deleteRoom(data)}
                     >
                       삭제
                     </Button>

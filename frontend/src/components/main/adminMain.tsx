@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Drawer, DrawerTrigger } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import RoomPage from "../component/form/roomPage";
 
 import ListTab from "../component/tab/ListTab";
 import NavPage from "../component/form/nav/navPage";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { DialogDescription, DialogTitle } from "../ui/dialog";
 
 type Reser = {
   id: number;
@@ -55,7 +57,6 @@ function AdminMain() {
         activeKey={{ key: activeKey, setKey: setActiveKey }}
       ></ListTab>
 
-      {/* 회의실 관리 폼 */}
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerTrigger
           onClick={() => setOpen(true)}
@@ -63,7 +64,17 @@ function AdminMain() {
         >
           회의실 관리
         </DrawerTrigger>
-        <RoomPage></RoomPage>
+
+        <DrawerContent>
+          <VisuallyHidden>
+            <DialogTitle>숨겨진 제목</DialogTitle>
+          </VisuallyHidden>
+          <DialogDescription>
+            회의실 정보를 관리할 수 있는 패널입니다.
+          </DialogDescription>
+
+          <RoomPage setReserList={setReserList} />
+        </DrawerContent>
       </Drawer>
     </>
   );

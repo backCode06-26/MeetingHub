@@ -1,11 +1,10 @@
-# 빌드 단계
-FROM maven:3.8.2-eclipse-temurin-17 AS build
-WORKDIR /app
-COPY . .
-RUN mvn clean package -DskipTests
+# 서버를 구동시킬 자바를 받아옵니다.
+FROM openjdk:17
 
-# 실행 단계
-FROM eclipse-temurin:17-jre
-WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ARG JAR_FILE=./target/*.jar
+
+# 지정한 jar 파일을 app.jar 라는 이름으로 Docker Container에 추가합니다.
+ADD ${JAR_FILE} app.jar
+
+# app.jar 파일을 실행합니다.
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]

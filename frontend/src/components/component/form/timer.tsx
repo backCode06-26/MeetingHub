@@ -17,6 +17,7 @@ type Time = {
 };
 
 type FormValues = {
+  reserId : number;
   email: string;
   roomId: number;
   reserDate: Date;
@@ -38,7 +39,7 @@ type editProps = {
   reserId: number;
 };
 
-type timerToggle = {
+type TimerToggle = {
   reserList: Reser[];
   setReserList: React.Dispatch<React.SetStateAction<Reser[]>>;
   setOpen: () => void;
@@ -54,7 +55,7 @@ function Timer({
   tabs,
   edit = { isEdit: false, reserId: 0 },
   setKey,
-}: timerToggle) {
+}: TimerToggle) {
   const navigate = useNavigate();
 
   const yesterDay = new Date();
@@ -71,6 +72,7 @@ function Timer({
   const { handleSubmit, setValue, getValues, reset, register } =
     useForm<FormValues>({
       defaultValues: {
+        reserId : edit.reserId,
         email: "",
         roomId: 0,
         reserDate: new Date(),
@@ -86,6 +88,8 @@ function Timer({
         const endDate = res.data.endDate;
 
         const payload = {
+          id : edit.reserId,
+          email : getValues("email"),
           roomId: res.data.roomId,
           reserDate: new Date(res.data.reserDate),
           startDate: startDate,
@@ -120,7 +124,9 @@ function Timer({
     // 사용자 정보 조회
     axios
       .get("/api/user/info", { withCredentials: true })
-      .then(({ data }) => setValue("email", data.email))
+      .then(({ data }) => {
+        setValue("email", data.email)
+      })
       .catch((err) => {
         console.error("로그인 정보 불러오기 실패:", err);
         navigate("/");
@@ -206,6 +212,10 @@ function Timer({
 
   // 자체 유효성 검사 함수
   const validateForm = (data: FormValues) => {
+    if (!data.reserId) {
+      alert("예약번호를 확인해주세요");
+      return false;
+    }
     if (!data.email) {
       alert("이메일을 입력해주시요");
       return false;
@@ -248,7 +258,7 @@ function Timer({
     if (!validateForm(data)) return;
 
     const payload = {
-      email: data.email,
+      email: getValues("email"),
       roomId: data.roomId,
       reserDate: format(data.reserDate, "yyyy-MM-dd"),
       startDate: data.startDate,

@@ -41,8 +41,9 @@ function ReserPage(toggle: ReserForm) {
           setReserList={toggle.setReserList}
           setOpen={() => toggle.setOpen(false)}
           tabs={toggle.tabs}
-          setKey={toggle.setKey}
-        ></Timer>
+          setKey={toggle.setKey}>
+            
+          </Timer>
       </DrawerHeader>
 
       <DrawerFooter className="p-5 pt-1">
