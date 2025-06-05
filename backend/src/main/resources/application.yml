@@ -3,10 +3,10 @@ spring:
     name: backend
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
-    url: ${DB_URL:jdbc:mariadb://localhost:3306/rever}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:1234}
-  
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -20,3 +20,8 @@ logging:
     org.hibernate.type: trace
 server:
   port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
