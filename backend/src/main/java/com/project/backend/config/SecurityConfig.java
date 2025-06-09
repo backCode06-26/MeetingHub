@@ -31,17 +31,17 @@ public class SecurityConfig {
     SecurityFilterChain customSecurityFilterChain(HttpSecurity http) throws Exception {
         // 다른 포트의 정보를 요청하기 위한 코드
         http.cors(corsCustomizer -> corsCustomizer.configurationSource(new CorsConfigurationSource() {
-            @Override
-            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
-                CorsConfiguration config = new CorsConfiguration();
-                config.setAllowedOrigins(Collections.singletonList("http://localhost:5179"));
-                config.setAllowedMethods(Collections.singletonList("*"));
-                config.setAllowCredentials(true);
-                config.setAllowedHeaders(Collections.singletonList("*"));
-                config.setMaxAge(3600L);
-                return config;
-            }
-        })).csrf(AbstractHttpConfigurer::disable)
+                    @Override
+                    public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
+                        CorsConfiguration config = new CorsConfiguration();
+                        config.setAllowedOrigins(Collections.singletonList("http://localhost:5179"));
+                        config.setAllowedMethods(Collections.singletonList("*"));
+                        config.setAllowCredentials(true);
+                        config.setAllowedHeaders(Collections.singletonList("*"));
+                        config.setMaxAge(3600L);
+                        return config;
+                    }
+                })).csrf(AbstractHttpConfigurer::disable)
 
                 // 로그인을 하기 위한 코드
                 .formLogin((form) -> form
@@ -65,7 +65,7 @@ public class SecurityConfig {
                 )
                 .userDetailsService(userDetailsService)
                 .logout((logout) -> logout
-                        .logoutUrl("/api/logout")                  // 로그아웃 요청 경로 지정
+                                .logoutUrl("/api/logout")                  // 로그아웃 요청 경로 지정
 //                        .logoutSuccessHandler((request, response, authentication) -> {
 //                            response.setStatus(HttpServletResponse.SC_OK);
 //                            response.setContentType("application/json");

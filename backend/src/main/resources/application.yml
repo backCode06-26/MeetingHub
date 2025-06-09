@@ -1,9 +1,12 @@
 spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
   application:
     name: backend
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
-    url: ${DB_URL}
+    url: jdbc:mariadb://${DB_HOST}:${DB_PORT}/rever
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
@@ -14,10 +17,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MariaDBDialect
         format_sql: true
+
 logging:
   level:
     org.hibernate.sql: debug
     org.hibernate.type: trace
+
 server:
   port: 8080
   servlet:
